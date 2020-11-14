@@ -8,7 +8,7 @@ function createApolloClient() {
   return new ApolloClient({
     ssrMode: typeof window === 'undefined',
     link: new HttpLink({
-      uri: 'http://localhost:8000/subgraphs/name/yieldprotocol/mainnet-staging',
+      uri: 'https://api.thegraph.com/subgraphs/name/yieldprotocol/mainnet-staging',
       credentials: 'same-origin', // Additional fetch() options like `credentials` or `headers`
     }),
     cache: new InMemoryCache({

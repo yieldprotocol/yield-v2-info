@@ -4,15 +4,14 @@ import { gql, useQuery, NetworkStatus } from '@apollo/client'
 
 export const MATURITY_QUERY = gql`
   query getMaturity($symbol: String!) {
-    maturities(where:{ symbol: $symbol }) {
+    fydais(where:{ symbol: $symbol }) {
       id
       symbol
       name
       maturity
       totalSupply
-      pool {
-        totalVolumeDai
-      }
+      apr
+      totalVolumeDai
     }
   }
 `
@@ -26,16 +25,16 @@ const MaturityStats: React.FC<{ symbol: string }> = ({ symbol }) => {
     return <pre>{error}</pre>
   }
 
-  if (data.maturities.length === 0) {
+  if (data.fydais.length === 0) {
     return <div>Not found</div>
   }
 
-  const [maturity] = data.maturities;
+  const [fydai] = data.fydais;
 
   return (
     <div>
-      <h1>{maturity.name} ({maturity.symbol})</h1>
-      <div><a href={`https://etherscan.io/address/${maturity.id}`} target="etherscan">{maturity.id}</a></div>
+      <h1>{parseFloat(fydai.apr).toFixed(2)}% {fydai.name} ({fydai.symbol})</h1>
+      <div><a href={`https://etherscan.io/address/${fydai.id}`} target="etherscan">{fydai.id}</a></div>
     </div>
   )
 }
