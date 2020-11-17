@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import MaturityList, { ALL_MATURITIES_QUERY } from 'components/MaturityList';
 import { initializeApollo } from 'lib/apolloClient';
+import { estimateBlock24hrAgo } from 'lib/ethereum';
 
 const HeadingBar = styled.div`
   display: flex;
@@ -30,7 +31,7 @@ export default SeriesPage;
 export async function getStaticProps() {
   const apolloClient = initializeApollo();
 
-  await apolloClient.query({ query: ALL_MATURITIES_QUERY });
+  await apolloClient.query({ query: ALL_MATURITIES_QUERY, variables: { yesterdayBlock: estimateBlock24hrAgo() } });
 
   return {
     props: {
