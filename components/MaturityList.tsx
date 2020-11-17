@@ -99,8 +99,8 @@ const MaturityList: React.FC = () => {
   }
 
   const now = Date.now() / 1000;
-  const matured = data.fydais.filter(fydai => parseInt(fydai.maturity) < now);
-  const active = data.fydais.filter(fydai => parseInt(fydai.maturity) > now);
+  const matured = data.fydais.filter((fydai: any) => parseInt(fydai.maturity) < now);
+  const active = data.fydais.filter((fydai: any) => parseInt(fydai.maturity) > now);
 
   const volumeYesterdayMapping = createVolumeYesterdayMapping(data.volYesterday);
 
@@ -115,7 +115,7 @@ const MaturityList: React.FC = () => {
       </Heading>
 
       <TableBody>
-        {active.map(fydai => (
+        {active.map((fydai: any) => (
           <TableLI key={fydai.symbol}>
             <Link href={`/series/${fydai.symbol}`} passHref>
               <TableLink>
@@ -139,7 +139,7 @@ const MaturityList: React.FC = () => {
           <Fragment>
             <TableSubheader>Matured</TableSubheader>
 
-            {matured.map(fydai => (
+            {matured.map((fydai: any) => (
               <TableLI key={fydai.symbol}>
                 <Link href={`/series/${fydai.symbol}`} passHref>
                   <TableLink>

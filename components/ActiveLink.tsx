@@ -1,11 +1,10 @@
-import React, { Children } from 'react'
+import React, { Children, ReactElement } from 'react'
 import { useRouter } from 'next/router'
-import PropTypes from 'prop-types'
 import Link, { LinkProps } from 'next/link'
 
 const ActiveLink: React.FC<LinkProps> = ({ children, ...props }) => {
   const { asPath } = useRouter()
-  const child = Children.only(children)
+  const child = Children.only(children) as ReactElement;
 
   // pages/index.js will be matched via props.href
   // pages/about.js will be matched via props.href

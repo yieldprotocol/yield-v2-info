@@ -169,7 +169,7 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
   const totalVolTwoDaysAgo = data.twoDaysAgo && data.twoDaysAgo.length > 0 ? parseFloat(data.twoDaysAgo[0].totalVolumeDai) : 0;
   const volLast24hrs = totalVolNow - totalVolYesterday;
   const volPrevious24hrs = totalVolYesterday - totalVolTwoDaysAgo;
-  const volPercentDiff = totalVolYesterday !== 0 && totalVolTwoDaysAgo !== 0 ? volLast24hrs / volPrevious24hrs - 1 : null;
+  const volPercentDiff = volLast24hrs !== 0 && volPrevious24hrs !== 0 ? volLast24hrs / volPrevious24hrs - 1 : null;
 
   return (
     <div>
