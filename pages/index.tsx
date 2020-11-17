@@ -2,15 +2,17 @@ import styled from 'styled-components';
 import MaturityList, { ALL_MATURITIES_QUERY } from 'components/MaturityList';
 import { initializeApollo } from 'lib/apolloClient';
 
-const Title = styled.h1`
-  color: red;
-  font-size: 50px;
+const Heading = styled.h2`
+  font-family: Syne;
+  font-weight: bold;
+  font-size: 24px;
+  color: #ffffff;
 `
 
 export default function Home() {
   return (
     <div>
-      <Title>My page</Title>
+      <Heading>Series Information</Heading>
       <MaturityList />
     </div>
   );

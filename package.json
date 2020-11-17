@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.2.5",
+    "date-fns": "^2.16.1",
     "graphql": "^15.4.0",
     "next": "latest",
     "next-images": "^1.6.2",
