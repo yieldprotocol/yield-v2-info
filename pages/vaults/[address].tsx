@@ -3,10 +3,8 @@ import styled from 'styled-components';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { gql, useQuery } from '@apollo/client'
-import format from 'date-fns/format';
-import APRPill from 'components/APRPill';
+import VaultSeriesList from 'components/VaultSeriesList';
 import { initializeApollo } from 'lib/apolloClient';
-import { estimateBlock24hrAgo, estimateBlock48hrAgo } from 'lib/ethereum';
 import backArrow from 'assets/back.svg';
 
 const Toolbar = styled.div`
@@ -79,13 +77,11 @@ export const VAULT_QUERY = gql`
       id
       collateralETH
       collateralChai
-      totalFYDaiDebt
-      totalFYDaiDebtFromETH
-      totalFYDaiDebtFromChai
       maturities {
         fyDai {
           maturity
-          currentFYDaiPriceInDai
+          apr
+          symbol
         }
         totalFYDaiDebt
       }
@@ -95,7 +91,7 @@ export const VAULT_QUERY = gql`
 
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 3 };
 
-const Series: React.FC<{ address: string }> = ({ address }) => {
+const VaultDetails: React.FC<{ address: string }> = ({ address }) => {
   const { error, data } = useQuery(VAULT_QUERY, { variables: { address } });
 
   if (error) {
@@ -145,11 +141,13 @@ const Series: React.FC<{ address: string }> = ({ address }) => {
           </VaultStat>
         )}
       </VaultStatBar>
+
+      <VaultSeriesList data={data.vault.maturities} />
     </div>
   );
 };
 
-export default Series;
+export default VaultDetails;
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const apolloClient = initializeApollo();
