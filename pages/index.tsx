@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import MaturityList, { ALL_MATURITIES_QUERY } from 'components/MaturityList';
+import StatBar, { STAT_BAR_QUERY } from 'components/StatBar';
 import { initializeApollo } from 'lib/apolloClient';
 
 const Heading = styled.h2`
@@ -12,6 +13,7 @@ const Heading = styled.h2`
 export default function Home() {
   return (
     <div>
+      <StatBar />
       <Heading>Series Information</Heading>
       <MaturityList />
     </div>
@@ -21,7 +23,10 @@ export default function Home() {
 export async function getStaticProps() {
   const apolloClient = initializeApollo();
 
-  await apolloClient.query({ query: ALL_MATURITIES_QUERY });
+  await Promise.all([
+    apolloClient.query({ query: ALL_MATURITIES_QUERY }),
+    apolloClient.query({ query: STAT_BAR_QUERY }),
+  ]);
 
   return {
     props: {

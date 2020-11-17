@@ -13,6 +13,7 @@ const HeaderContaner = styled.header`
 
 const HeaderLink = styled.a<{ active?: boolean }>`
   color: ${props => props.active ? '#ffffff' : '#848484'};
+  text-decoration: ${props => props.active ? 'underline' : 'none'};
   font-family: 'Syne', sans-serif;
   margin: 0 8px;
   font-weight: 500;
