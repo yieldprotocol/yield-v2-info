@@ -3,6 +3,7 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
 import format from 'date-fns/format';
+import { estimateBlock24hrAgo } from 'lib/ethereum';
 import APRPill from './APRPill';
 
 const Table = styled.div`
@@ -59,14 +60,36 @@ export const ALL_MATURITIES_QUERY = gql`
   query maturities {
     fydais(orderBy: maturity) {
       symbol
-      name
       maturity
       apr
+      poolDaiReserves
+      poolFYDaiReserves
+      currentFYDaiPriceInDai
+      totalTradingFeesInDai
+      totalVolumeDai
+    }
+
+    volYesterday: fydais(block: {number: ${estimateBlock24hrAgo()}}) {
+      symbol
+      totalVolumeDai
     }
   }
 `
 
 const formatMaturity = (timestamp: string) => format(new Date(parseInt(timestamp) * 1000), 'MMMM yyyy');
+
+const calculateLiquidity = (fyDai: any) =>
+  parseFloat(fyDai.poolDaiReserves) + (parseFloat(fyDai.poolFYDaiReserves) * parseFloat(fyDai.currentFYDaiPriceInDai));
+
+const createVolumeYesterdayMapping = (fydais: any[]) => {
+  const mapping: { [symbol: string]: number } = {};
+  for (const { symbol, totalVolumeDai } of fydais) {
+    mapping[symbol] = parseFloat(totalVolumeDai);
+  }
+  return mapping;
+}
+
+const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
 const MaturityList: React.FC = () => {
   const { error, data } = useQuery(ALL_MATURITIES_QUERY);
@@ -79,12 +102,14 @@ const MaturityList: React.FC = () => {
   const matured = data.fydais.filter(fydai => parseInt(fydai.maturity) < now);
   const active = data.fydais.filter(fydai => parseInt(fydai.maturity) > now);
 
+  const volumeYesterdayMapping = createVolumeYesterdayMapping(data.volYesterday);
+
   return (
     <Table>
       <Heading>
         <HeadingCol width={80}>APR</HeadingCol>
         <HeadingCol flex={1}>Series</HeadingCol>
-        <HeadingCol width={120} flex={0.5}>Liquidity</HeadingCol>
+        <HeadingCol width={130} flex={0.6}>Liquidity</HeadingCol>
         <HeadingCol width={120} flex={0.5}>Volume (24 hrs)</HeadingCol>
         <HeadingCol width={120} flex={0.5}>Fees Paid</HeadingCol>
       </Heading>
@@ -98,9 +123,13 @@ const MaturityList: React.FC = () => {
                   <APRPill apr={parseFloat(fydai.apr)} series={fydai.symbol} />
                 </Cell>
                 <Cell flex={1}>{formatMaturity(fydai.maturity)}</Cell>
-                <Cell width={120} flex={0.5}>$140,000</Cell>
-                <Cell width={120} flex={0.5}>$29,000</Cell>
-                <Cell width={120} flex={0.5}>$95</Cell>
+                <Cell width={130} flex={0.6}>${calculateLiquidity(fydai).toLocaleString(undefined, localeOptions)}</Cell>
+                <Cell width={120} flex={0.5}>
+                  ${(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)}
+                </Cell>
+                <Cell width={120} flex={0.5}>
+                  ${parseFloat(fydai.totalTradingFeesInDai).toLocaleString(undefined, localeOptions)}
+                </Cell>
               </TableLink>
             </Link>
           </TableLI>
@@ -116,9 +145,13 @@ const MaturityList: React.FC = () => {
                   <TableLink>
                     <Cell width={80} />
                     <Cell flex={1}>{formatMaturity(fydai.maturity)}</Cell>
-                    <Cell width={120} flex={0.5}>$140,000</Cell>
-                    <Cell width={120} flex={0.5}>$29,000</Cell>
-                    <Cell width={120} flex={0.5}>$95</Cell>
+                    <Cell width={130} flex={0.6}>${calculateLiquidity(fydai).toLocaleString(undefined, localeOptions)}</Cell>
+                    <Cell width={120} flex={0.5}>
+                      ${(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)}
+                    </Cell>
+                    <Cell width={120} flex={0.5}>
+                      ${parseFloat(fydai.totalTradingFeesInDai).toLocaleString(undefined, localeOptions)}
+                    </Cell>
                   </TableLink>
                 </Link>
               </TableLI>
