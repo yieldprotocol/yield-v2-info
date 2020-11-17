@@ -62,7 +62,7 @@ export const TOP_VAULTS_QUERY = gql`
       totalFYDaiDebt
       totalFYDaiDebtFromETH
       totalFYDaiDebtFromChai
-      maturities {
+      fyDais(where:{ totalFYDaiDebt_gt: "0"}) {
         fyDai {
           maturity
           currentFYDaiPriceInDai
@@ -74,6 +74,9 @@ export const TOP_VAULTS_QUERY = gql`
 `;
 
 const formatMaturity = (timestamp: string) => format(new Date(parseInt(timestamp) * 1000), 'MMMM yyyy');
+
+const totalDebt = (vault: any) => vault.fyDais.reduce((sum: number, fyDai: any) =>
+  sum + (parseFloat(fyDai.totalFYDaiDebt) * parseFloat(fyDai.fyDai.currentFYDaiPriceInDai)), 0);
 
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
@@ -100,13 +103,13 @@ const TopVaultList: React.FC = () => {
               <TableLink>
                 <Cell width={80} flex={0.8}>{vault.id}</Cell>
                 {/* TODO: convert totalFYDaiDebt to totalDaiDebt */}
-                <Cell width={100} flex={0.5}>{parseFloat(vault.totalFYDaiDebt).toLocaleString(undefined, localeOptions)} fyDai</Cell>
+                <Cell width={100} flex={0.5}>${totalDebt(vault).toLocaleString(undefined, localeOptions)}</Cell>
                 <Cell width={130} flex={1}>
-                  {vault.maturities.map((maturity: any) => (
+                  {vault.fyDais.map((maturity: any) => (
                     <Line key={maturity.fyDai.maturity}>
                       {formatMaturity(maturity.fyDai.maturity)}
                       {' • $'}
-                      {(parseFloat(vault.totalFYDaiDebt) * parseFloat(maturity.fyDai.currentFYDaiPriceInDai)).toLocaleString(undefined, localeOptions)}
+                      {(parseFloat(maturity.totalFYDaiDebt) * parseFloat(maturity.fyDai.currentFYDaiPriceInDai)).toLocaleString(undefined, localeOptions)}
                     </Line>
                   ))}
                 </Cell>
