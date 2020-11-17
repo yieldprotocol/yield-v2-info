@@ -214,7 +214,6 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
 export default Series;
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-
   const apolloClient = initializeApollo();
 
   await apolloClient.query({
