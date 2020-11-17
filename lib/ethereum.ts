@@ -6,7 +6,8 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export const estimateCurrentBlock = () => {
   // @ts-ignore
   const daysSinceNov17 = (new Date() - FIRST_BLOCK_TIME_NOV_17) / (MS_PER_DAY);
-  const block = Math.floor(FIRST_BLOCK_NUM_NOV_17_UTC + (BLOCKS_PER_DAY * daysSinceNov17));
+  const roundedDaysSinceNov17 = Math.round(daysSinceNov17 / 5000) * 5000;
+  const block = FIRST_BLOCK_NUM_NOV_17_UTC + (BLOCKS_PER_DAY * roundedDaysSinceNov17);
   return block;
 };
 

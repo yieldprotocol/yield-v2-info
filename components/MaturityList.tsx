@@ -57,7 +57,7 @@ const TableSubheader = styled.li`
 `
 
 export const ALL_MATURITIES_QUERY = gql`
-  query maturities {
+  query maturities($yesterdayBlock: Int!) {
     fydais(orderBy: maturity) {
       symbol
       maturity
@@ -69,7 +69,7 @@ export const ALL_MATURITIES_QUERY = gql`
       totalVolumeDai
     }
 
-    volYesterday: fydais(block: {number: ${estimateBlock24hrAgo()}}) {
+    volYesterday: fydais(block: {number: $yesterdayBlock}) {
       symbol
       totalVolumeDai
     }
@@ -92,7 +92,11 @@ const createVolumeYesterdayMapping = (fydais: any[]) => {
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
 const MaturityList: React.FC = () => {
-  const { error, data } = useQuery(ALL_MATURITIES_QUERY);
+  const { error, data } = useQuery(ALL_MATURITIES_QUERY, {
+    variables: {
+      yesterdayBlock: estimateBlock24hrAgo(),
+    },
+  });
 
   if (error || !data) {
     return <pre>{error}</pre>

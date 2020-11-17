@@ -3,6 +3,7 @@ import MaturityList, { ALL_MATURITIES_QUERY } from 'components/MaturityList';
 import TopVaultsList, { TOP_VAULTS_QUERY } from 'components/TopVaultsList';
 import StatBar, { STAT_BAR_QUERY } from 'components/StatBar';
 import { initializeApollo } from 'lib/apolloClient';
+import { estimateBlock24hrAgo } from 'lib/ethereum';
 
 const Heading = styled.h2`
   font-family: Syne;
@@ -29,7 +30,7 @@ export async function getStaticProps() {
   const apolloClient = initializeApollo();
 
   await Promise.all([
-    apolloClient.query({ query: ALL_MATURITIES_QUERY }),
+    apolloClient.query({ query: ALL_MATURITIES_QUERY, variables: { yesterdayBlock: estimateBlock24hrAgo() } }),
     apolloClient.query({ query: STAT_BAR_QUERY }),
     apolloClient.query({ query: TOP_VAULTS_QUERY }),
   ]);
