@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import MaturityList from 'components/MaturityList';
+import MaturityList, { ALL_MATURITIES_QUERY } from 'components/MaturityList';
+import { initializeApollo } from 'lib/apolloClient';
 
 const HeadingBar = styled.div`
   display: flex;
@@ -25,3 +26,16 @@ const SeriesPage = () => {
 };
 
 export default SeriesPage;
+
+export async function getStaticProps() {
+  const apolloClient = initializeApollo();
+
+  await apolloClient.query({ query: ALL_MATURITIES_QUERY });
+
+  return {
+    props: {
+      initialApolloState: apolloClient.cache.extract(),
+    },
+    revalidate: 1,
+  };
+}
