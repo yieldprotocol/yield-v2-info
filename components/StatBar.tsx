@@ -31,16 +31,15 @@ const Val = styled.dd`
 export const STAT_BAR_QUERY = gql`
   query stats {
     yield(id: "1") {
-      totalTradingFeesInDai
-      totalVolumeDai
       collateralETH
       collateralChai
-      totalFYDaiDebt
-      totalFYDaiDebtFromETH
-      totalFYDaiDebtFromChai
+      totalPoolDai
+      totalPoolFYDai
     }
   }
 `;
+
+const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
 const StatBar = () => {
   const { error, data } = useQuery(STAT_BAR_QUERY);
@@ -49,20 +48,19 @@ const StatBar = () => {
     return <pre>{error}</pre>
   }
 
-  // TODO: Convert ETH/Chai to USD
   return (
     <Bar>
       <Def>ETH Collateral:</Def>
-      <Val>{parseFloat(data.yield.collateralETH).toFixed(2)} ETH</Val>
+      <Val>{parseFloat(data.yield.collateralETH).toLocaleString(undefined, localeOptions)} ETH</Val>
 
       <Def>Chai Collateral:</Def>
-      <Val>{parseFloat(data.yield.collateralChai).toFixed(2)}</Val>
+      <Val>{parseFloat(data.yield.collateralChai).toLocaleString(undefined, localeOptions)}</Val>
 
       <Def>Dai in Pools:</Def>
-      <Val>$140,000</Val>
+      <Val>{parseFloat(data.yield.totalPoolDai).toLocaleString(undefined, localeOptions)} Dai</Val>
 
       <Def>fyDai in Pools:</Def>
-      <Val>$140,000</Val>
+      <Val>{parseFloat(data.yield.totalPoolFYDai).toLocaleString(undefined, localeOptions)} fyDai</Val>
     </Bar>
   )
 }
