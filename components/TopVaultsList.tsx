@@ -60,8 +60,6 @@ export const TOP_VAULTS_QUERY = gql`
       collateralETH
       collateralChai
       totalFYDaiDebt
-      totalFYDaiDebtFromETH
-      totalFYDaiDebtFromChai
       fyDais(where:{ totalFYDaiDebt_gt: "0"}) {
         fyDai {
           maturity
@@ -93,7 +91,7 @@ const TopVaultList: React.FC = () => {
         <HeadingCol width={80} flex={0.8}>Account</HeadingCol>
         <HeadingCol width={100} flex={0.5}>Outstanding Debt</HeadingCol>
         <HeadingCol width={130} flex={1}>Per Series Debt</HeadingCol>
-        <HeadingCol width={100} flex={0.4}>Per Collateral Debt</HeadingCol>
+        <HeadingCol width={100} flex={0.4}>Collateral</HeadingCol>
       </Heading>
 
       <TableBody>
@@ -114,7 +112,12 @@ const TopVaultList: React.FC = () => {
                   ))}
                 </Cell>
                 <Cell width={100} flex={0.4}>
-                  $1
+                  {vault.collateralETH !== '0' && (
+                    <Line>{parseFloat(vault.collateralETH).toLocaleString(undefined, localeOptions)} ETH</Line>
+                  )}
+                  {vault.collateralChai !== '0' && (
+                    <Line>{parseFloat(vault.collateralChai).toLocaleString(undefined, localeOptions)} Chai</Line>
+                  )}
                 </Cell>
               </TableLink>
             </Link>
