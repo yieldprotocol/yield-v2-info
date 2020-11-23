@@ -32,9 +32,12 @@ export const STAT_BAR_QUERY = gql`
   query stats {
     yield(id: "1") {
       collateralETH
+      collateralETHInUSD
       collateralChai
+      collateralChaiInDai
       totalPoolDai
       totalPoolFYDai
+      poolTLVInDai
     }
   }
 `;
@@ -48,13 +51,22 @@ const StatBar = () => {
     return <pre>{error}</pre>
   }
 
+  const {
+    collateralETH, collateralChai, poolTLVInDai, collateralETHInUSD, collateralChaiInDai
+  } = data.yield;
+
+  const tlv = parseFloat(poolTLVInDai) + parseFloat(collateralETHInUSD) + parseFloat(collateralChaiInDai);
+
   return (
     <Bar>
+      <Def>Total Locked Value (USD):</Def>
+      <Val>${parseFloat(tlv).toLocaleString(undefined, localeOptions)}</Val>
+
       <Def>ETH Collateral:</Def>
-      <Val>{parseFloat(data.yield.collateralETH).toLocaleString(undefined, localeOptions)} ETH</Val>
+      <Val>{parseFloat(collateralETH).toLocaleString(undefined, localeOptions)} ETH</Val>
 
       <Def>Chai Collateral:</Def>
-      <Val>{parseFloat(data.yield.collateralChai).toLocaleString(undefined, localeOptions)}</Val>
+      <Val>{parseFloat(collateralChai).toLocaleString(undefined, localeOptions)}</Val>
 
       <Def>Dai in Pools:</Def>
       <Val>{parseFloat(data.yield.totalPoolDai).toLocaleString(undefined, localeOptions)} Dai</Val>
