@@ -12,8 +12,11 @@
     "graphql": "^15.4.0",
     "next": "latest",
     "next-images": "^1.6.2",
+    "numeral": "^2.0.6",
+    "polished": "^4.0.4",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
+    "recharts": "^1.8.5",
     "styled-components": "^5.0.0"
   },
   "devDependencies": {

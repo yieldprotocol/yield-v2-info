@@ -77,7 +77,7 @@ export const VAULT_QUERY = gql`
       id
       collateralETH
       collateralChai
-      maturities {
+      fyDais {
         fyDai {
           maturity
           apr
@@ -142,7 +142,7 @@ const VaultDetails: React.FC<{ address: string }> = ({ address }) => {
         )}
       </VaultStatBar>
 
-      <VaultSeriesList data={data.vault.maturities} />
+      <VaultSeriesList data={data.vault.fyDais} />
     </div>
   );
 };

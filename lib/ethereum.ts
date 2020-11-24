@@ -13,4 +13,4 @@ export const estimateCurrentBlock = () => {
 
 export const estimateBlock24hrAgo = () => estimateCurrentBlock() - BLOCKS_PER_DAY;
 
-export const estimateBlock48hrAgo = () => estimateCurrentBlock() - (BLOCKS_PER_DAY * 2);
+export const estimateBlockDaysAgo = (numDays: number) => estimateCurrentBlock() - (BLOCKS_PER_DAY * numDays)

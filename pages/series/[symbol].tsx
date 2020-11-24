@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { gql, useQuery } from '@apollo/client'
 import format from 'date-fns/format';
 import APRPill from 'components/APRPill';
+import SeriesCharts, { ChartDay } from 'components/SeriesCharts';
 import { initializeApollo } from 'lib/apolloClient';
-import { estimateBlock24hrAgo, estimateBlock48hrAgo } from 'lib/ethereum';
+import { estimateBlockDaysAgo } from 'lib/ethereum';
 import backArrow from 'assets/back.svg';
 
 const Toolbar = styled.div`
@@ -79,12 +80,13 @@ const DataBox = styled.div`
   padding: 32px;
 `;
 
-const GraphPlaceholder = styled.div`
+const GraphContainer = styled.div`
   flex: 2;
   background: rgba(255, 255, 255, 0.02);
   border: 1.5px solid rgba(255, 255, 255, 0.16);
   border-radius: 12px;
   margin-left: 24px;
+  padding: 32px;
 `;
 
 const DataLabel = styled.div`
@@ -106,9 +108,11 @@ const Percent = styled.div<{ negative?: boolean }>`
   color: ${props => props.negative ? '#F4B731' : '#6FCF97'};
 `;
 
+const timePeriods = ['now', 'yesterday', 'twoDaysAgo', 'threeDaysAgo', 'fourDaysAgo', 'fiveDaysAgo', 'sixDaysAgo', 'sevenDaysAgo'];
+
 export const SERIES_QUERY = gql`
-  query getMaturity($symbol: String!, $yesterdayBlock: Int!, $twoDaysAgoBlock: Int!) {
-    fydais(where:{ symbol: $symbol }) {
+  query getMaturity($symbol: String!, ${timePeriods.slice(1).map((name: string) => `$${name}Block: Int!`).join(', ')}) {
+    now: fydais(where:{ symbol: $symbol }) {
       address
       symbol
       maturity
@@ -119,18 +123,24 @@ export const SERIES_QUERY = gql`
       totalVolumeDai
     }
 
-    yesterday: fydais(where: { symbol: $symbol }, block: {number: $yesterdayBlock }) {
-      totalVolumeDai
-      poolDaiReserves
-      poolFYDaiReserves
-      currentFYDaiPriceInDai
-    }
-
-    twoDaysAgo: fydais(where: { symbol: $symbol }, block: {number: $twoDaysAgoBlock }) {
-      totalVolumeDai
-    }
+    ${timePeriods.slice(1).map((name: string) => `
+      ${name}: fydais(where: { symbol: $symbol }, block: {number: $${name}Block }) {
+        totalVolumeDai
+        poolDaiReserves
+        poolFYDaiReserves
+        currentFYDaiPriceInDai
+      }
+    `)}
   }
 `;
+
+const getBlockNums = () => {
+  const blocks: any = {};
+  timePeriods.map((name: string, i: number) => {
+    blocks[`${name}Block`] = estimateBlockDaysAgo(i);
+  });
+  return blocks;
+}
 
 const formatMaturity = (timestamp: string) => format(new Date(parseInt(timestamp) * 1000), 'MMMM yyyy');
 
@@ -139,14 +149,19 @@ const formatPercent = (num: number) => `${num > 0 ? '+' : ''}${(num * 100).toFix
 const calculateLiquidity = (fyDai: any) =>
   parseFloat(fyDai.poolDaiReserves) + (parseFloat(fyDai.poolFYDaiReserves) * parseFloat(fyDai.currentFYDaiPriceInDai));
 
+const createChartData = (fydai: any, daysAgo: number): ChartDay => ({
+  date: Math.floor((Date.now() / 1000) - (daysAgo * 24 * 60 * 60)).toString(),
+  dayString: Math.floor((Date.now() / 1000) - (daysAgo * 24 * 60 * 60)).toString(),
+  liquidityUSD: calculateLiquidity(fydai),
+});
+
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
 const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
   const { error, data } = useQuery(SERIES_QUERY, {
     variables: {
       symbol,
-      yesterdayBlock: estimateBlock24hrAgo(),
-      twoDaysAgoBlock: estimateBlock48hrAgo(),
+      ...getBlockNums(),
     },
   });
 
@@ -154,11 +169,11 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
     return <pre>{error}</pre>
   }
 
-  if (data.fydais.length === 0) {
+  if (data.now.length === 0) {
     return <div>Not found</div>
   }
 
-  const [fydai] = data.fydais;
+  const [fydai] = data.now;
 
   const liquidityNow = calculateLiquidity(fydai);
   const liquidityYesterday = data.yesterday && data.yesterday.length > 0 ? calculateLiquidity(data.yesterday[0]) : 0;
@@ -170,6 +185,8 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
   const volLast24hrs = totalVolNow - totalVolYesterday;
   const volPrevious24hrs = totalVolYesterday - totalVolTwoDaysAgo;
   const volPercentDiff = volLast24hrs !== 0 && volPrevious24hrs !== 0 ? volLast24hrs / volPrevious24hrs - 1 : null;
+
+  const chartData = timePeriods.map((name: string, i: number) => createChartData(data[name][0], i));
 
   return (
     <div>
@@ -205,7 +222,9 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
           </DataBox>
         </HeroColumn>
 
-        <GraphPlaceholder />
+        <GraphContainer>
+          <SeriesCharts data={chartData} />
+        </GraphContainer>
       </Hero>
     </div>
   );
@@ -220,8 +239,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     query: SERIES_QUERY,
     variables: {
       symbol: query.symbol,
-      yesterdayBlock: estimateBlock24hrAgo(),
-      twoDaysAgoBlock: estimateBlock48hrAgo(),
+      ...getBlockNums(),
     },
   });
 
