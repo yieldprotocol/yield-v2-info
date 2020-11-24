@@ -4,16 +4,18 @@ import { darken } from 'polished';
 import format from 'date-fns/format';
 import Numeral from 'numeral';
 
-const toK = (num: number) => Numeral(num).format('0.[00]a');
+const toK = (num: number | string) => Numeral(num).format('0.[00]a');
 
-const formattedNum = (number, usd = false, acceptNegatives = false) => {
+const formattedNum = (number: number | string, usd = false) => {
+  // @ts-ignore
   if (isNaN(number) || number === '' || number === undefined) {
     return usd ? '$0' : 0
   }
+  // @ts-ignore
   let num = parseFloat(number)
 
   if (num > 500000000) {
-    return (usd ? '$' : '') + toK(num.toFixed(0), true)
+    return (usd ? '$' : '') + toK(num.toFixed(0))
   }
 
   if (num === 0) {
@@ -29,8 +31,8 @@ const formattedNum = (number, usd = false, acceptNegatives = false) => {
 
   if (num > 1000) {
     return usd
-      ? '$' + Number(parseFloat(num).toFixed(0)).toLocaleString()
-      : '' + Number(parseFloat(num).toFixed(0)).toLocaleString()
+      ? '$' + Number(num.toFixed(0)).toLocaleString()
+      : '' + Number(num.toFixed(0)).toLocaleString()
   }
 
   // if (usd) {
@@ -42,12 +44,12 @@ const formattedNum = (number, usd = false, acceptNegatives = false) => {
   //   }
   // }
 
-  return Number(parseFloat(num).toFixed(5))
+  return Number(num.toFixed(5))
 }
 
-const toNiceDate = (date) => format(new Date(date * 1000), 'MMM dd');
+const toNiceDate = (date: string) => format(new Date(parseInt(date) * 1000), 'MMM dd');
 
-const toNiceDateYear = (date) => format(new Date(date * 1000), 'MMMM dd, yyyy');
+const toNiceDateYear = (date: string) => format(new Date(parseInt(date) * 1000), 'MMMM dd, yyyy');
 
 export interface ChartDay {
   date: string;
@@ -100,8 +102,8 @@ const SeriesCharts: React.FC<SeriesChartProps> = ({ data }) => {
         />
         <Tooltip
           cursor={true}
-          formatter={(val) => formattedNum(val, true)}
-          labelFormatter={(label) => toNiceDateYear(label)}
+          formatter={(val: any) => formattedNum(val, true)}
+          labelFormatter={(label: any) => toNiceDateYear(label)}
           labelStyle={{ paddingTop: 4 }}
           contentStyle={{
             padding: '10px 14px',

@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
-import format from 'date-fns/format';
 
 const Table = styled.div`
   padding: 24px;
@@ -55,8 +54,6 @@ export const SERIES_TX_QUERY = gql`
     }
   }
 `;
-
-const formatMaturity = (timestamp: string) => format(new Date(parseInt(timestamp) * 1000), 'MMMM yyyy');
 
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 

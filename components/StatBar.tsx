@@ -60,7 +60,7 @@ const StatBar = () => {
   return (
     <Bar>
       <Def>Total Locked Value (USD):</Def>
-      <Val>${parseFloat(tlv).toLocaleString(undefined, localeOptions)}</Val>
+      <Val>${tlv.toLocaleString(undefined, localeOptions)}</Val>
 
       <Def>ETH Collateral:</Def>
       <Val>{parseFloat(collateralETH).toLocaleString(undefined, localeOptions)} ETH</Val>
