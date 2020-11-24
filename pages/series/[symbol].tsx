@@ -6,6 +6,7 @@ import { gql, useQuery } from '@apollo/client'
 import format from 'date-fns/format';
 import APRPill from 'components/APRPill';
 import SeriesCharts, { ChartDay } from 'components/SeriesCharts';
+import TransactionList, { SERIES_TX_QUERY } from 'components/TransactionList';
 import { initializeApollo } from 'lib/apolloClient';
 import { estimateBlockDaysAgo } from 'lib/ethereum';
 import backArrow from 'assets/back.svg';
@@ -108,11 +109,19 @@ const Percent = styled.div<{ negative?: boolean }>`
   color: ${props => props.negative ? '#F4B731' : '#6FCF97'};
 `;
 
+const Heading = styled.h2`
+  font-family: Syne;
+  font-weight: bold;
+  font-size: 24px;
+  color: #ffffff;
+`;
+
 const timePeriods = ['now', 'yesterday', 'twoDaysAgo', 'threeDaysAgo', 'fourDaysAgo', 'fiveDaysAgo', 'sixDaysAgo', 'sevenDaysAgo'];
 
 export const SERIES_QUERY = gql`
   query getMaturity($symbol: String!, ${timePeriods.slice(1).map((name: string) => `$${name}Block: Int!`).join(', ')}) {
     now: fydais(where:{ symbol: $symbol }) {
+      id
       address
       symbol
       maturity
@@ -226,6 +235,9 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
           <SeriesCharts data={chartData} />
         </GraphContainer>
       </Hero>
+
+      <Heading>Transactions</Heading>
+      <TransactionList fyDai={fydai.id} />
     </div>
   );
 };
@@ -235,13 +247,21 @@ export default Series;
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const apolloClient = initializeApollo();
 
-  await apolloClient.query({
+  const result = await apolloClient.query({
     query: SERIES_QUERY,
     variables: {
       symbol: query.symbol,
       ...getBlockNums(),
     },
   });
+  if (result.data.now.length > 0) {
+    await apolloClient.query({
+      query: SERIES_TX_QUERY,
+      variables: {
+        fyDai: result.data.now[0].id,
+      },
+    });
+  }
 
   return {
     props: {
