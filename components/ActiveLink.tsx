@@ -2,7 +2,7 @@ import React, { Children, ReactElement } from 'react'
 import { useRouter } from 'next/router'
 import Link, { LinkProps } from 'next/link'
 
-const ActiveLink: React.FC<LinkProps> = ({ children, ...props }) => {
+const ActiveLink: React.FC<LinkProps & { exact?: boolean }> = ({ children, exact, ...props }) => {
   const { asPath } = useRouter()
   const child = Children.only(children) as ReactElement;
 
@@ -13,7 +13,7 @@ const ActiveLink: React.FC<LinkProps> = ({ children, ...props }) => {
   return (
     <Link {...props}>
       {React.cloneElement(child, {
-        active: asPath === props.href || asPath === props.as,
+        active: exact ? asPath === props.href : asPath.indexOf(props.href) === 0,
       })}
     </Link>
   )

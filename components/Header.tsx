@@ -43,7 +43,7 @@ const Header: React.FC = () => {
       </div>
 
       <div>
-        <ActiveLink href="/" passHref>
+        <ActiveLink href="/" passHref exact>
           <HeaderLink>Overview</HeaderLink>
         </ActiveLink>
         <ActiveLink href="/series" passHref>
