@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import Link from 'next/link'
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
-import formatDistanceToNow from 'date-fns/formatDistanceToNow'
+import formatDistanceToNowStrict from 'date-fns/formatDistanceToNowStrict';
 import { formatMaturity } from 'lib/format';
+import { initializeApollo } from 'lib/apolloClient';
 import backArrow from 'assets/back.svg';
 import forwardArrow from 'assets/forward.svg';
 
@@ -241,7 +242,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ fyDai, vault }) => {
   }
 
   // Fetch the next page to cache it
-  useQuery(fyDai ? SERIES_TX_QUERY : VAULT_TX_QUERY, {
+  initializeApollo().query({
+    query: fyDai ? SERIES_TX_QUERY : VAULT_TX_QUERY,
     variables: {
       fyDai,
       vault,
@@ -281,7 +283,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ fyDai, vault }) => {
                 <TableLink>{fyDai ? tx.from : formatMaturity(tx.fyDai.maturity)}</TableLink>
               </Link>
             </Cell>
-            <Cell width={100} flex={0.5}>{formatDistanceToNow(new Date(tx.timestamp * 1000))} ago</Cell>
+            <Cell width={100} flex={0.5}>{formatDistanceToNowStrict(new Date(tx.timestamp * 1000))} ago</Cell>
           </TableLI>
         ))}
       </TableBody>
