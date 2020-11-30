@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
-import format from 'date-fns/format';
+import { formatMaturity } from 'lib/format';
 import { estimateBlock24hrAgo } from 'lib/ethereum';
 import APRPill from './APRPill';
 
@@ -75,8 +75,6 @@ export const ALL_MATURITIES_QUERY = gql`
     }
   }
 `
-
-const formatMaturity = (timestamp: string) => format(new Date(parseInt(timestamp) * 1000), 'MMMM yyyy');
 
 const calculateLiquidity = (fyDai: any) =>
   parseFloat(fyDai.poolDaiReserves) + (parseFloat(fyDai.poolFYDaiReserves) * parseFloat(fyDai.currentFYDaiPriceInDai));

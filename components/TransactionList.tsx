@@ -3,6 +3,7 @@ import Link from 'next/link'
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow'
+import { formatMaturity } from 'lib/format';
 import backArrow from 'assets/back.svg';
 import forwardArrow from 'assets/forward.svg';
 
@@ -120,6 +121,44 @@ export const SERIES_TX_QUERY = gql`
   }
 `;
 
+export const VAULT_TX_QUERY = gql`
+  query getTransactions($vault: String!, $before: Int!, $limit: Int!) {
+    trades(where: { from: $vault, timestamp_lt: $before }, first: $limit, orderBy: timestamp, orderDirection: desc) {
+      id
+      timestamp
+      from
+      amountDai
+      amountFYDai
+      fyDai {
+        maturity
+        symbol
+      }
+    }
+    liquidities(where: { from: $vault, timestamp_lt: $before }, first: $limit, orderBy: timestamp, orderDirection: desc) {
+      id
+      timestamp
+      from
+      amountDai
+      amountFYDai
+      fyDai {
+        maturity
+        symbol
+      }
+    }
+    borrows(where: { from: $vault, timestamp_lt: $before }, first: $limit, orderBy: timestamp, orderDirection: desc) {
+      id
+      timestamp
+      from
+      amountFYDai
+      collateral
+      fyDai {
+        maturity
+        symbol
+      }
+    }
+  }
+`;
+
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
 const formatNum = (num: number, prefix: string = '') =>
@@ -168,16 +207,22 @@ export const NUM_ROWS = 10;
 export const MAX_TIMESTAMP = 2000000000
 
 interface TransactionListProps {
-  fyDai: string;
+  fyDai?: string;
+  vault?: string;
 }
 
-const TransactionList: React.FC<TransactionListProps> = ({ fyDai }) => {
+const TransactionList: React.FC<TransactionListProps> = ({ fyDai, vault }) => {
   const [timelimit, setTimelimit] = useState<number[]>([MAX_TIMESTAMP]);
   const currentTimelimit = timelimit[timelimit.length - 1];
-  
-  const { error, data } = useQuery(SERIES_TX_QUERY, {
+
+  if (!fyDai && !vault) {
+    throw new Error('[TransactionList] Must pass fyDai or vault');
+  }
+
+  const { error, data } = useQuery(fyDai ? SERIES_TX_QUERY : VAULT_TX_QUERY, {
     variables: {
       fyDai,
+      vault,
       limit: NUM_ROWS,
       before: currentTimelimit,
     },
@@ -189,10 +234,17 @@ const TransactionList: React.FC<TransactionListProps> = ({ fyDai }) => {
 
   const { transactions, nextPage } = mergeTransactions(data, NUM_ROWS);
 
+  if (transactions.length === 0) {
+    return (
+      <Table>No Transactions</Table>
+    );
+  }
+
   // Fetch the next page to cache it
-  useQuery(SERIES_TX_QUERY, {
+  useQuery(fyDai ? SERIES_TX_QUERY : VAULT_TX_QUERY, {
     variables: {
       fyDai,
+      vault,
       limit: NUM_ROWS,
       before: transactions[transactions.length - 1].timestamp,
     },
@@ -207,7 +259,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ fyDai }) => {
         <HeadingCol width={80} flex={0.8}>Action</HeadingCol>
         <HeadingCol width={80} flex={0.5}>Dai</HeadingCol>
         <HeadingCol width={80} flex={0.5}>fyDai</HeadingCol>
-        <HeadingCol width={100} flex={1}>Account</HeadingCol>
+        <HeadingCol width={100} flex={1}>{fyDai ? 'Account' : 'Series'}</HeadingCol>
         <HeadingCol width={100} flex={0.5}>Time</HeadingCol>
       </Heading>
 
@@ -225,8 +277,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ fyDai }) => {
             <Cell width={80} flex={0.5}>{formatNum(tx.amountDai, '$')}</Cell>
             <Cell width={80} flex={0.5}>{formatNum(tx.amountFYDai)}</Cell>
             <Cell width={100} flex={1}>
-              <Link href={`/vaults/${tx.from}`} passHref>
-                <TableLink>{tx.from}</TableLink>
+              <Link href={fyDai ? `/vaults/${tx.from}` : `/series/${tx.fyDai.symbol}`} passHref>
+                <TableLink>{fyDai ? tx.from : formatMaturity(tx.fyDai.maturity)}</TableLink>
               </Link>
             </Cell>
             <Cell width={100} flex={0.5}>{formatDistanceToNow(new Date(tx.timestamp * 1000))} ago</Cell>

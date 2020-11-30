@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import format from 'date-fns/format';
+import { formatMaturity } from 'lib/format';
 import APRPill from './APRPill';
 
 const Table = styled.div`
@@ -39,8 +39,6 @@ const Row = styled.li`
   font-weight: bold;
 `;
 
-
-const formatMaturity = (timestamp: string) => format(new Date(parseInt(timestamp) * 1000), 'MMMM yyyy');
 
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 

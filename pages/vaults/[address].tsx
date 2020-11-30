@@ -4,6 +4,7 @@ import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { gql, useQuery } from '@apollo/client'
 import VaultSeriesList from 'components/VaultSeriesList';
+import TransactionList, { VAULT_TX_QUERY, NUM_ROWS, MAX_TIMESTAMP } from 'components/TransactionList';
 import { initializeApollo } from 'lib/apolloClient';
 import backArrow from 'assets/back.svg';
 
@@ -59,6 +60,13 @@ const VaultStatBar = styled.dl`
 
 const VaultStat = styled.div``;
 
+const Heading = styled.h2`
+  font-family: Syne;
+  font-weight: bold;
+  font-size: 24px;
+  color: #ffffff;
+`;
+
 const Def = styled.dt`
   font-weight: bold;
   font-size: 14px;
@@ -98,23 +106,6 @@ const VaultDetails: React.FC<{ address: string }> = ({ address }) => {
     return <pre>{error}</pre>
   }
 
-  if (data.vault === null) {
-    return (
-      <div>
-        <Toolbar>
-          <Link href="/vaults" passHref>
-            <BackButton>Back to accounts</BackButton>
-          </Link>
-
-          <EtherscanLink href={`https://etherscan.io/address/${address}`}>View on Etherscan</EtherscanLink>
-        </Toolbar>
-
-        <Title>{address}</Title>
-        <div>No activity</div>
-      </div>
-    )
-  }
-
   return (
     <div>
       <Toolbar>
@@ -127,22 +118,29 @@ const VaultDetails: React.FC<{ address: string }> = ({ address }) => {
 
       <Title>{address}</Title>
 
-      <VaultStatBar>
-        {data.vault.collateralETH !== '0' && (
-          <VaultStat>
-            <Def>ETH Collateral</Def>
-            <Val>{parseFloat(data.vault.collateralETH).toLocaleString(undefined, localeOptions)}</Val>
-          </VaultStat>
-        )}
-        {data.vault.collateralChai !== '0' && (
-          <VaultStat>
-            <Def>Chai Collateral</Def>
-            <Val>{parseFloat(data.vault.collateralChai).toLocaleString(undefined, localeOptions)}</Val>
-          </VaultStat>
-        )}
-      </VaultStatBar>
+      {data.vault && (
+        <Fragment>
+          <VaultStatBar>
+            {data.vault.collateralETH !== '0' && (
+              <VaultStat>
+                <Def>ETH Collateral</Def>
+                <Val>{parseFloat(data.vault.collateralETH).toLocaleString(undefined, localeOptions)}</Val>
+              </VaultStat>
+            )}
+            {data.vault.collateralChai !== '0' && (
+              <VaultStat>
+                <Def>Chai Collateral</Def>
+                <Val>{parseFloat(data.vault.collateralChai).toLocaleString(undefined, localeOptions)}</Val>
+              </VaultStat>
+            )}
+          </VaultStatBar>
 
-      <VaultSeriesList data={data.vault.fyDais} />
+          <VaultSeriesList data={data.vault.fyDais} />
+        </Fragment>
+      )}
+
+      <Heading>Transactions</Heading>
+      <TransactionList vault={address} />
     </div>
   );
 };
@@ -155,6 +153,14 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   await apolloClient.query({
     query: VAULT_QUERY,
     variables: { address: query.address },
+  });
+  await apolloClient.query({
+    query: VAULT_TX_QUERY,
+    variables: {
+      vault: query.address,
+      limit: NUM_ROWS,
+      before: MAX_TIMESTAMP,
+    },
   });
 
   return {
