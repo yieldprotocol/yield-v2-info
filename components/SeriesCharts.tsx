@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Area, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, LineChart, CartesianGrid } from 'recharts';
+import { Area, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, LineChart } from 'recharts';
 import { darken } from 'polished';
 import format from 'date-fns/format';
 import Numeral from 'numeral';
@@ -89,7 +89,7 @@ const SeriesCharts: React.FC<SeriesChartProps> = ({ data }) => {
   const textColor = 'white';
 
   const Chart = key === 'liquidityUSD' ? AreaChart : LineChart;
-  const Data = key === 'liquidityUSD' ? Area : Line;
+  const Data: any = key === 'liquidityUSD' ? Area : Line;
 
   return (
     <div>
