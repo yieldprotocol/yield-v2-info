@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Link from 'next/link'
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow'
@@ -47,7 +48,7 @@ const TableLI = styled.li`
   }
 `;
 
-const ActionLink = styled.a`
+const TableLink = styled.a`
   color: #ffffff;
   text-decoration: underline;
 
@@ -109,10 +110,20 @@ export const SERIES_TX_QUERY = gql`
       amountDai
       amountFYDai
     }
+    borrows(where: { fyDai: $fyDai, timestamp_lt: $before }, first: $limit, orderBy: timestamp, orderDirection: desc) {
+      id
+      timestamp
+      from
+      amountFYDai
+      collateral
+    }
   }
 `;
 
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+
+const formatNum = (num: number, prefix: string = '') =>
+  isNaN(num) ? '' : prefix + Math.abs(num).toLocaleString(undefined, localeOptions);
 
 const mergeTransactions = (result: any, limit: number) => {
   let transactions: any[] = [];
@@ -122,6 +133,9 @@ const mergeTransactions = (result: any, limit: number) => {
   }
   if (result.trades) {
     transactions = [...transactions, ...result.liquidities];
+  }
+  if (result.borrows) {
+    transactions = [...transactions, ...result.borrows];
   }
   
   transactions = transactions.map((tx: any) => ({
@@ -143,6 +157,9 @@ const eventAction = (event: any): string => {
   }
   if (event.__typename === 'Liquidity') {
     return `${event.amountDai > 0 ? 'Add' : 'Remove'} Liquidity`;
+  }
+  if (event.__typename === 'Borrow') {
+    return `${event.amountFYDai > 0 ? 'Borrow' : 'Repay'} against ${event.collateral}`;
   }
   return '';
 }
@@ -198,20 +215,20 @@ const TransactionList: React.FC<TransactionListProps> = ({ fyDai }) => {
         {transactions.map((tx: any) => (
           <TableLI key={tx.id}>
             <Cell width={80} flex={0.8}>
-              <ActionLink
+              <TableLink
                 href={`https://etherscan.io/tx/${tx.id.substr(0, tx.id.indexOf('-'))}`}
                 target="etherscan"
               >
                 {eventAction(tx)}
-              </ActionLink>
+              </TableLink>
             </Cell>
-            <Cell width={80} flex={0.5}>
-              ${Math.abs(parseFloat(tx.amountDai)).toLocaleString(undefined, localeOptions)}
+            <Cell width={80} flex={0.5}>{formatNum(tx.amountDai, '$')}</Cell>
+            <Cell width={80} flex={0.5}>{formatNum(tx.amountFYDai)}</Cell>
+            <Cell width={100} flex={1}>
+              <Link href={`/vaults/${tx.from}`} passHref>
+                <TableLink>{tx.from}</TableLink>
+              </Link>
             </Cell>
-            <Cell width={80} flex={0.5}>
-              ${Math.abs(parseFloat(tx.amountFYDai)).toLocaleString(undefined, localeOptions)}
-            </Cell>
-            <Cell width={100} flex={1}>{tx.from}</Cell>
             <Cell width={100} flex={0.5}>{formatDistanceToNow(new Date(tx.timestamp * 1000))} ago</Cell>
           </TableLI>
         ))}
