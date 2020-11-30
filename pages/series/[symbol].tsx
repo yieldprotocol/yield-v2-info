@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { gql, useQuery } from '@apollo/client'
-import format from 'date-fns/format';
+import { formatMaturity } from 'lib/format';
 import APRPill from 'components/APRPill';
 import SeriesCharts, { ChartDay } from 'components/SeriesCharts';
 import TransactionList, { SERIES_TX_QUERY, NUM_ROWS, MAX_TIMESTAMP } from 'components/TransactionList';
@@ -116,7 +116,7 @@ const Heading = styled.h2`
   color: #ffffff;
 `;
 
-const timePeriods = ['now', 'yesterday', 'twoDaysAgo', 'threeDaysAgo', 'fourDaysAgo', 'fiveDaysAgo', 'sixDaysAgo', 'sevenDaysAgo'];
+const timePeriods = ['now', 'yesterday', 'twoDaysAgo', 'threeDaysAgo', 'fourDaysAgo', 'fiveDaysAgo', 'sixDaysAgo', 'sevenDaysAgo', 'eightDaysAgo'];
 
 export const SERIES_QUERY = gql`
   query getMaturity($symbol: String!, ${timePeriods.slice(1).map((name: string) => `$${name}Block: Int!`).join(', ')}) {
@@ -138,6 +138,7 @@ export const SERIES_QUERY = gql`
         poolDaiReserves
         poolFYDaiReserves
         currentFYDaiPriceInDai
+        apr
       }
     `)}
   }
@@ -151,17 +152,19 @@ const getBlockNums = () => {
   return blocks;
 }
 
-const formatMaturity = (timestamp: string) => format(new Date(parseInt(timestamp) * 1000), 'MMMM yyyy');
-
 const formatPercent = (num: number) => `${num > 0 ? '+' : ''}${(num * 100).toFixed(2)}%`;
 
 const calculateLiquidity = (fyDai: any) =>
   parseFloat(fyDai.poolDaiReserves) + (parseFloat(fyDai.poolFYDaiReserves) * parseFloat(fyDai.currentFYDaiPriceInDai));
 
+const secondsInDay = 24 * 60 * 60;
+const todayTimestamp = Math.floor(Date.now() / 1000 / secondsInDay) * secondsInDay;
+
 const createChartData = (fydai: any, daysAgo: number): ChartDay => ({
-  date: Math.floor((Date.now() / 1000) - (daysAgo * 24 * 60 * 60)).toString(),
-  dayString: Math.floor((Date.now() / 1000) - (daysAgo * 24 * 60 * 60)).toString(),
+  date: Math.floor(todayTimestamp - (daysAgo * secondsInDay)).toString(),
+  dayString: Math.floor(todayTimestamp - (daysAgo * secondsInDay)).toString(),
   liquidityUSD: calculateLiquidity(fydai),
+  apr: parseFloat(fydai.apr),
 });
 
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
