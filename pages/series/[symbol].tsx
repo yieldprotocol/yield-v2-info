@@ -63,6 +63,10 @@ const Title = styled.h1`
 
 const Hero = styled.div`
   display: flex;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
 const HeroColumn = styled.div`
@@ -88,6 +92,11 @@ const GraphContainer = styled.div`
   border-radius: 12px;
   margin-left: 24px;
   padding: 32px;
+
+  @media (max-width: 768px) {
+    margin-top: 24px;
+    margin-left: 0;
+  }
 `;
 
 const DataLabel = styled.div`

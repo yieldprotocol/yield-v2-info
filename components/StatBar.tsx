@@ -10,6 +10,10 @@ const Bar = styled.dl`
   display: flex;
   justify-content: center;
   align-items: center;
+
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+  }
 `;
 
 const Def = styled.dt`
@@ -19,12 +23,24 @@ const Def = styled.dt`
   margin-left: 4px;
   text-align: right;
   padding-right: 3px;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    width: 50%;
+    margin: 4px 0;
+  }
 `;
 
 const Val = styled.dd`
   display: inline-block;
   margin: 0;
   margin-right: 4px;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    width: 50%;
+    margin: 4px 0;
+  }
 `;
 
 
