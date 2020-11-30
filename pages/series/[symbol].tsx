@@ -6,7 +6,7 @@ import { gql, useQuery } from '@apollo/client'
 import format from 'date-fns/format';
 import APRPill from 'components/APRPill';
 import SeriesCharts, { ChartDay } from 'components/SeriesCharts';
-import TransactionList, { SERIES_TX_QUERY } from 'components/TransactionList';
+import TransactionList, { SERIES_TX_QUERY, NUM_ROWS, MAX_TIMESTAMP } from 'components/TransactionList';
 import { initializeApollo } from 'lib/apolloClient';
 import { estimateBlockDaysAgo } from 'lib/ethereum';
 import backArrow from 'assets/back.svg';
@@ -259,6 +259,8 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
       query: SERIES_TX_QUERY,
       variables: {
         fyDai: result.data.now[0].id,
+        limit: NUM_ROWS,
+        before: MAX_TIMESTAMP,
       },
     });
   }
