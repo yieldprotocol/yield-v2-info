@@ -2,47 +2,54 @@ import React from 'react';
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
 
-const Bar = styled.dl`
+const Bar = styled.div`
   padding: 12px 24px;
-  background: rgba(86, 65, 255, 0.41);
-  border-radius: 12px;
   margin: 52px 40px;
   display: flex;
-  justify-content: center;
-  align-items: center;
 
   @media (max-width: 768px) {
     flex-wrap: wrap;
   }
 `;
 
-const Def = styled.dt`
-  display: inline-block;
-  margin: 0;
-  font-weight: bold;
-  margin-left: 4px;
-  text-align: right;
-  padding-right: 3px;
-  box-sizing: border-box;
+const Card = styled.div`
+  background: rgba(255, 255, 255, 0.02);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  flex: 1;
+  padding: 24px 8px;
 
-  @media (max-width: 768px) {
-    width: 50%;
-    margin: 4px 0;
-  }
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  text-align: center;
+  margin: 8px;
 `;
 
-const Val = styled.dd`
-  display: inline-block;
-  margin: 0;
-  margin-right: 4px;
-  box-sizing: border-box;
-
-  @media (max-width: 768px) {
-    width: 50%;
-    margin: 4px 0;
-  }
+const TLV = styled.div`
+  font-size: 24px;
+  margin-bottom: 4px;
 `;
 
+const TLVLabel = styled.div``;
+
+const ValRow = styled.div`
+  display: flex;
+  font-size: 18px;
+`;
+
+const Val = styled.div`
+  margin-bottom: 2px;
+  flex: 1;
+`;
+
+const Label = styled.div``;
+
+const Spacer = styled.div`
+  height: 8px;
+  flex: 1;
+`;
 
 export const STAT_BAR_QUERY = gql`
   query stats {
@@ -75,20 +82,26 @@ const StatBar = () => {
 
   return (
     <Bar>
-      <Def>Total Locked Value (USD):</Def>
-      <Val>${tlv.toLocaleString(undefined, localeOptions)}</Val>
+      <Card>
+        <TLV>${tlv.toLocaleString(undefined, localeOptions)}</TLV>
+        <TLVLabel>Total Locked Value (USD)</TLVLabel>
+      </Card>
 
-      <Def>ETH Collateral:</Def>
-      <Val>{parseFloat(collateralETH).toLocaleString(undefined, localeOptions)} ETH</Val>
+      <Card>
+        <ValRow>
+          <Val>{parseFloat(collateralETH).toLocaleString(undefined, localeOptions)} ETH</Val>
+          <Val>{parseFloat(collateralChai).toLocaleString(undefined, localeOptions)} Chai</Val>
+        </ValRow>
+        <Label>Collateral</Label>
 
-      <Def>Chai Collateral:</Def>
-      <Val>{parseFloat(collateralChai).toLocaleString(undefined, localeOptions)}</Val>
+        <Spacer />
 
-      <Def>Dai in Pools:</Def>
-      <Val>{parseFloat(data.yield.totalPoolDai).toLocaleString(undefined, localeOptions)} Dai</Val>
-
-      <Def>fyDai in Pools:</Def>
-      <Val>{parseFloat(data.yield.totalPoolFYDai).toLocaleString(undefined, localeOptions)} fyDai</Val>
+        <ValRow>
+          <Val>{parseFloat(data.yield.totalPoolDai).toLocaleString(undefined, localeOptions)} Dai</Val>
+          <Val>{parseFloat(data.yield.totalPoolFYDai).toLocaleString(undefined, localeOptions)} fyDai</Val>
+        </ValRow>
+        <Label>Assets in pools</Label>
+      </Card>
     </Bar>
   )
 }
