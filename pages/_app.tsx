@@ -1,9 +1,11 @@
+import React, { useEffect } from 'react';
 import Head from 'next/head'
 import { AppProps } from 'next/app';
 import { ApolloProvider } from '@apollo/client'
 import { useApollo } from 'lib/apolloClient'
 import styled, { createGlobalStyle } from 'styled-components'
-import Header from 'components/Header'
+import Header from 'components/Header';
+import ReactGA from 'react-ga';
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -25,9 +27,15 @@ const Container = styled.div`
   max-width: 984px;
   width: 100%;
 `
+ReactGA.initialize(process.env.NEXT_APP_GA as string);
 
 const App: React.FC<AppProps> = ({ Component, pageProps }) => {
   const apolloClient = useApollo(pageProps.initialApolloState)
+
+  useEffect(() => {
+    ReactGA.set({ page: window.location.pathname });
+    ReactGA.pageview(window.location.pathname);
+  }, [window.location.pathname]);
 
   return (
     <ApolloProvider client={apolloClient}>
