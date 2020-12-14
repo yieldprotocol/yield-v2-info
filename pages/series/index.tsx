@@ -1,4 +1,5 @@
 import React from 'react';
+import Head from 'next/head';
 import styled from 'styled-components';
 import MaturityList, { ALL_MATURITIES_QUERY } from 'components/MaturityList';
 import { initializeApollo } from 'lib/apolloClient';
@@ -17,6 +18,10 @@ const Heading = styled.h2`
 const SeriesPage = () => {
   return (
     <div>
+      <Head>
+        <title>Series - Yield</title>
+      </Head>
+
       <HeadingBar>
         <Heading>Series</Heading>
       </HeadingBar>

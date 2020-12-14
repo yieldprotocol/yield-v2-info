@@ -1,4 +1,5 @@
 import React, { Fragment } from 'react';
+import Head from 'next/head';
 import styled from 'styled-components';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
@@ -108,6 +109,10 @@ const VaultDetails: React.FC<{ address: string }> = ({ address }) => {
 
   return (
     <div>
+      <Head>
+        <title>Account {address} - Yield</title>
+      </Head>
+
       <Toolbar>
         <Link href="/vaults" passHref>
           <BackButton>Back to accounts</BackButton>

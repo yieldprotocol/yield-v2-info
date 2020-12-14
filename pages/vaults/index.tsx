@@ -1,3 +1,4 @@
+import Head from 'next/head';
 import React from 'react';
 import styled from 'styled-components';
 import TopVaultsList, { TOP_VAULTS_QUERY } from 'components/TopVaultsList';
@@ -16,6 +17,10 @@ const Heading = styled.h2`
 const SeriesPage = () => {
   return (
     <div>
+      <Head>
+        <title>Top Accounts - Yield</title>
+      </Head>
+
       <HeadingBar>
         <Heading>Accounts</Heading>
       </HeadingBar>

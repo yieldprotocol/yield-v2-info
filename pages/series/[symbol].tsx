@@ -1,4 +1,5 @@
 import React from 'react';
+import Head from 'next/head';
 import styled from 'styled-components';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
@@ -211,6 +212,10 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
 
   return (
     <div>
+      <Head>
+        <title>{formatMaturity(fydai.maturity)} Series - Yield</title>
+      </Head>
+
       <Toolbar>
         <Link href="/series" passHref>
           <BackButton>Back to series</BackButton>

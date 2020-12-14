@@ -1,3 +1,4 @@
+import Head from 'next/head';
 import styled from 'styled-components';
 import MaturityList, { ALL_MATURITIES_QUERY } from 'components/MaturityList';
 import TopVaultsList, { TOP_VAULTS_QUERY } from 'components/TopVaultsList';
@@ -15,6 +16,10 @@ const Heading = styled.h2`
 export default function Home() {
   return (
     <div>
+      <Head>
+        <title>Borrowing & Lending Statistics - Yield</title>
+      </Head>
+
       <StatBar />
       
       <Heading>Series Information</Heading>
