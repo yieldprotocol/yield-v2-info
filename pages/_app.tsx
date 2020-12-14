@@ -35,7 +35,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
   useEffect(() => {
     ReactGA.set({ page: window.location.pathname });
     ReactGA.pageview(window.location.pathname);
-  }, [window.location.pathname]);
+  }, [Component]);
 
   return (
     <ApolloProvider client={apolloClient}>
