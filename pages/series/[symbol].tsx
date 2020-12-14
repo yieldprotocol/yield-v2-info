@@ -83,7 +83,7 @@ const DataBox = styled.div`
   border-radius: 12px;
   margin-top: 24px;
   flex: 1;
-  padding: 32px;
+  padding: 24px;
 `;
 
 const GraphContainer = styled.div`
@@ -136,6 +136,7 @@ export const SERIES_QUERY = gql`
       symbol
       maturity
       apr
+      totalSupply
       poolDaiReserves
       poolFYDaiReserves
       currentFYDaiPriceInDai
@@ -144,6 +145,7 @@ export const SERIES_QUERY = gql`
 
     ${timePeriods.slice(1).map((name: string) => `
       ${name}: fydais(where: { symbol: $symbol }, block: {number: $${name}Block }) {
+        totalSupply
         totalVolumeDai
         poolDaiReserves
         poolFYDaiReserves
@@ -166,6 +168,8 @@ const formatPercent = (num: number) => `${num > 0 ? '+' : ''}${(num * 100).toFix
 
 const calculateLiquidity = (fyDai: any) =>
   parseFloat(fyDai.poolDaiReserves) + (parseFloat(fyDai.poolFYDaiReserves) * parseFloat(fyDai.currentFYDaiPriceInDai));
+
+const calculateTotalBorrowed = (fyDai: any) => fyDai.totalSupply * fyDai.currentFYDaiPriceInDai;
 
 const secondsInDay = 24 * 60 * 60;
 const todayTimestamp = Math.floor(Date.now() / 1000 / secondsInDay) * secondsInDay;
@@ -201,6 +205,10 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
   const liquidityYesterday = data.yesterday && data.yesterday.length > 0 ? calculateLiquidity(data.yesterday[0]) : 0;
   const liquidityPercentDiff = liquidityYesterday !== 0 ? liquidityNow / liquidityYesterday - 1 : null;
 
+  const totalBorrowedNow = calculateTotalBorrowed(fydai);
+  const totalBorrowedYesterday = data.yesterday && data.yesterday.length > 0 ? calculateTotalBorrowed(data.yesterday[0]) : 0;
+  const totalBorrowedPercentDiff = totalBorrowedYesterday !== 0 ? totalBorrowedNow / totalBorrowedYesterday - 1 : null;
+
   const totalVolNow = parseFloat(fydai.totalVolumeDai);
   const totalVolYesterday = data.yesterday && data.yesterday.length > 0 ? parseFloat(data.yesterday[0].totalVolumeDai) : 0;
   const totalVolTwoDaysAgo = data.twoDaysAgo && data.twoDaysAgo.length > 0 ? parseFloat(data.twoDaysAgo[0].totalVolumeDai) : 0;
@@ -232,10 +240,22 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
       <Hero>
         <HeroColumn>
           <DataBox>
+            <DataLabel>Total Borrowed</DataLabel>
+            <DataVal>${totalBorrowedNow.toLocaleString(undefined, localeOptions)}</DataVal>
+            {totalBorrowedPercentDiff !== null && (
+              <Percent negative={totalBorrowedPercentDiff < 0}>
+                {formatPercent(totalBorrowedPercentDiff)}
+              </Percent>
+            )}
+          </DataBox>
+
+          <DataBox>
             <DataLabel>Total Liquidity</DataLabel>
-            <DataVal>${calculateLiquidity(fydai).toLocaleString(undefined, localeOptions)}</DataVal>
+            <DataVal>${liquidityNow.toLocaleString(undefined, localeOptions)}</DataVal>
             {liquidityPercentDiff !== null && (
-              <Percent negative={liquidityPercentDiff < 0}>{formatPercent(liquidityPercentDiff)}</Percent>
+              <Percent negative={liquidityPercentDiff < 0}>
+                {formatPercent(liquidityPercentDiff)}
+              </Percent>
             )}
           </DataBox>
 
@@ -243,7 +263,9 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
             <DataLabel>Volume (24 hrs)</DataLabel>
             <DataVal>${volLast24hrs.toLocaleString(undefined, localeOptions)}</DataVal>
             {volPercentDiff !== null && (
-              <Percent negative={volPercentDiff < 0}>{formatPercent(volPercentDiff)}</Percent>
+              <Percent negative={volPercentDiff < 0}>
+                {formatPercent(volPercentDiff)}
+              </Percent>
             )}
           </DataBox>
         </HeroColumn>
