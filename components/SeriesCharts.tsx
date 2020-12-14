@@ -76,26 +76,33 @@ export interface ChartDay {
   dayString: string;
   liquidityUSD: number;
   apr: number;
+  borrowed: number;
 }
 
 interface SeriesChartProps {
   data: ChartDay[];
 }
 
+const charts = {
+  borrowed: { label: 'Borrowed', Chart: AreaChart, Data: Area },
+  liquidityUSD: { label: 'Liquidity', Chart: AreaChart, Data: Area },
+  apr: { label: 'APR', Chart: LineChart, Data: Line },
+}
+
 const SeriesCharts: React.FC<SeriesChartProps> = ({ data }) => {
-  const [key, setKey] = useState('liquidityUSD');
+  const [key, setKey] = useState<'liquidityUSD' | 'apr' | 'borrowed'>('borrowed');
   const color = 'blue';
   const aspect = 60 / 28;
   const textColor = 'white';
 
-  const Chart = key === 'liquidityUSD' ? AreaChart : LineChart;
-  const Data: any = key === 'liquidityUSD' ? Area : Line;
+  const { Chart, Data } = charts[key] as any;
 
   return (
     <div>
       <div>
-        <KeyButton onClick={() => setKey('liquidityUSD')} disabled={key === 'liquidityUSD'}>Liquidity</KeyButton>
-        <KeyButton onClick={() => setKey('apr')} disabled={key === 'apr'}>APR</KeyButton>
+        {Object.entries(charts).map(([_key, { label }]) => (
+          <KeyButton key={_key} onClick={() => setKey(_key as any)} disabled={key === _key}>{label}</KeyButton>
+        ))}
       </div>
       <ResponsiveContainer aspect={aspect}>
         <Chart margin={{ top: 0, right: 10, bottom: 6, left: 0 }} barCategoryGap={1} data={data}>
@@ -120,7 +127,7 @@ const SeriesCharts: React.FC<SeriesChartProps> = ({ data }) => {
           <YAxis
             type="number"
             orientation="right"
-            tickFormatter={(tick) => key === 'liquidityUSD' ? '$' + toK(tick) : tick.toFixed(1) + '%'}
+            tickFormatter={(tick) => key === 'apr' ? tick.toFixed(1) + '%' : '$' + toK(tick)}
             axisLine={false}
             tickLine={false}
             interval="preserveEnd"
@@ -131,7 +138,7 @@ const SeriesCharts: React.FC<SeriesChartProps> = ({ data }) => {
           />
           <Tooltip
             cursor={true}
-            formatter={(val: any) => key === 'liquidityUSD' ? formattedNum(val, true) : val.toFixed(2) + '%'}
+            formatter={(val: any) => key === 'apr' ? val.toFixed(2) + '%' : formattedNum(val, true)}
             labelFormatter={(label: any) => toNiceDateYear(label)}
             labelStyle={{ paddingTop: 4 }}
             contentStyle={{
@@ -146,7 +153,7 @@ const SeriesCharts: React.FC<SeriesChartProps> = ({ data }) => {
             strokeWidth={2}
             dot={false}
             type="monotone"
-            name={key === 'liquidityUSD' ? ' (USD)' : 'APR'}
+            name={key === 'apr' ? 'APR' : ' (USD)'}
             dataKey={key}
             yAxisId={0}
             stroke={darken(0.12, color)}

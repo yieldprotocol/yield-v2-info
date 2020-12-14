@@ -179,6 +179,7 @@ const createChartData = (fydai: any, daysAgo: number): ChartDay => ({
   dayString: Math.floor(todayTimestamp - (daysAgo * secondsInDay)).toString(),
   liquidityUSD: calculateLiquidity(fydai),
   apr: parseFloat(fydai.apr),
+  borrowed: calculateTotalBorrowed(fydai),
 });
 
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
