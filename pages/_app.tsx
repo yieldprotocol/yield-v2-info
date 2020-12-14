@@ -27,7 +27,7 @@ const Container = styled.div`
   max-width: 984px;
   width: 100%;
 `
-ReactGA.initialize(process.env.NEXT_APP_GA as string);
+ReactGA.initialize('UA-180935349-3');
 
 const App: React.FC<AppProps> = ({ Component, pageProps }) => {
   const apolloClient = useApollo(pageProps.initialApolloState)
