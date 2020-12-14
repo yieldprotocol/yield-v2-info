@@ -17,7 +17,7 @@ const Card = styled.div`
   border: 1.5px solid rgba(255, 255, 255, 0.16);
   border-radius: 12px;
   flex: 1;
-  padding: 24px 8px;
+  padding: 12px 8px;
 
   display: flex;
   flex-direction: column;
@@ -46,9 +46,10 @@ const Val = styled.div`
 
 const Label = styled.div``;
 
-const Spacer = styled.div`
-  height: 8px;
+const Column = styled.div`
   flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
 
 export const STAT_BAR_QUERY = gql`
@@ -87,21 +88,23 @@ const StatBar = () => {
         <TLVLabel>Total Locked Value (USD)</TLVLabel>
       </Card>
 
-      <Card>
-        <ValRow>
-          <Val>{parseFloat(collateralETH).toLocaleString(undefined, localeOptions)} ETH</Val>
-          <Val>{parseFloat(collateralChai).toLocaleString(undefined, localeOptions)} Chai</Val>
-        </ValRow>
-        <Label>Collateral</Label>
+      <Column>
+        <Card>
+          <ValRow>
+            <Val>{parseFloat(collateralETH).toLocaleString(undefined, localeOptions)} ETH</Val>
+            <Val>{parseFloat(collateralChai).toLocaleString(undefined, localeOptions)} Chai</Val>
+          </ValRow>
+          <Label>Collateral</Label>
+        </Card>
 
-        <Spacer />
-
-        <ValRow>
-          <Val>{parseFloat(data.yield.totalPoolDai).toLocaleString(undefined, localeOptions)} Dai</Val>
-          <Val>{parseFloat(data.yield.totalPoolFYDai).toLocaleString(undefined, localeOptions)} fyDai</Val>
-        </ValRow>
-        <Label>Assets in pools</Label>
-      </Card>
+        <Card>
+          <ValRow>
+            <Val>{parseFloat(data.yield.totalPoolDai).toLocaleString(undefined, localeOptions)} Dai</Val>
+            <Val>{parseFloat(data.yield.totalPoolFYDai).toLocaleString(undefined, localeOptions)} fyDai</Val>
+          </ValRow>
+          <Label>Assets in pools</Label>
+        </Card>
+      </Column>
     </Bar>
   )
 }
