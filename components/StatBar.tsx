@@ -63,6 +63,11 @@ export const STAT_BAR_QUERY = gql`
       totalPoolFYDai
       poolTLVInDai
     }
+
+    fydais {
+      totalSupply
+      currentFYDaiPriceInDai
+    }
   }
 `;
 
@@ -80,21 +85,30 @@ const StatBar = () => {
   } = data.yield;
 
   const tlv = parseFloat(poolTLVInDai) + parseFloat(collateralETHInUSD) + parseFloat(collateralChaiInDai);
+  const totalBorrowed = data.fydais.reduce((total: number, fydai: any) =>
+    total + (fydai.totalSupply * fydai.currentFYDaiPriceInDai), 0);
 
   return (
     <Bar>
-      <Card>
-        <TLV>${tlv.toLocaleString(undefined, localeOptions)}</TLV>
-        <TLVLabel>Total Locked Value (USD)</TLVLabel>
-      </Card>
-
       <Column>
+        <Card>
+          <TLV>${totalBorrowed.toLocaleString(undefined, localeOptions)}</TLV>
+          <TLVLabel>Total Borrowed (USD)</TLVLabel>
+        </Card>
+
         <Card>
           <ValRow>
             <Val>{parseFloat(collateralETH).toLocaleString(undefined, localeOptions)} ETH</Val>
             <Val>{parseFloat(collateralChai).toLocaleString(undefined, localeOptions)} Chai</Val>
           </ValRow>
           <Label>Collateral</Label>
+        </Card>
+      </Column>
+
+      <Column>
+        <Card>
+          <TLV>${tlv.toLocaleString(undefined, localeOptions)}</TLV>
+          <TLVLabel>Total Value Locked (USD)</TLVLabel>
         </Card>
 
         <Card>
