@@ -42,6 +42,10 @@ const FYDaiChartBox: React.FC = () => {
   if (error) {
     return <pre>{error}</pre>
   }
+  if (!data) {
+    return null;
+  }
+
   const chartData = timePeriods.map((name: string, i: number) => ({
     date: Math.floor(todayTimestamp - (i * secondsInDay)).toString(),
     dayString: Math.floor(todayTimestamp - (i * secondsInDay)).toString(),
