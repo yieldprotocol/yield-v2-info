@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { Area, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, LineChart } from 'recharts';
+import React from 'react';
+import { Area, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart } from 'recharts';
 import { darken } from 'polished';
 import format from 'date-fns/format';
 import Numeral from 'numeral';
-import styled from 'styled-components';
 
 const toK = (num: number | string) => Numeral(num).format('0.[00]a');
 
