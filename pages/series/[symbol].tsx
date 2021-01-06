@@ -179,7 +179,7 @@ const createChartData = (fydai: any, daysAgo: number): ChartDay => ({
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
 const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
-  const { error, data } = useQuery(SERIES_QUERY, {
+  const { data, error } = useQuery(SERIES_QUERY, {
     variables: {
       symbol,
       ...getBlockNums(NUM_DAYS),
@@ -190,7 +190,7 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
     return <pre>{error}</pre>
   }
 
-  if (data.now.length === 0) {
+  if (!data || data.now.length === 0) {
     return <div>Not found</div>
   }
 
