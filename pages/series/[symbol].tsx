@@ -9,7 +9,7 @@ import APRPill from 'components/APRPill';
 import SeriesCharts, { ChartDay } from 'components/SeriesCharts';
 import TransactionList, { SERIES_TX_QUERY, NUM_ROWS, MAX_TIMESTAMP } from 'components/TransactionList';
 import { initializeApollo } from 'lib/apolloClient';
-import { estimateBlockDaysAgo } from 'lib/ethereum';
+import { getTimePeriods, getBlockNums } from 'lib/ethereum';
 import backArrow from 'assets/back.svg';
 
 const Toolbar = styled.div`
@@ -126,9 +126,11 @@ const Heading = styled.h2`
   color: #ffffff;
 `;
 
-const timePeriods = ['now', 'yesterday', 'twoDaysAgo', 'threeDaysAgo', 'fourDaysAgo', 'fiveDaysAgo', 'sixDaysAgo', 'sevenDaysAgo', 'eightDaysAgo'];
+const NUM_DAYS = 9;
 
-export const SERIES_QUERY = gql`
+const timePeriods = getTimePeriods(NUM_DAYS);
+
+const SERIES_QUERY = gql`
   query getMaturity($symbol: String!, ${timePeriods.slice(1).map((name: string) => `$${name}Block: Int!`).join(', ')}) {
     now: fydais(where:{ symbol: $symbol }) {
       id
@@ -156,14 +158,6 @@ export const SERIES_QUERY = gql`
   }
 `;
 
-const getBlockNums = () => {
-  const blocks: any = {};
-  timePeriods.map((name: string, i: number) => {
-    blocks[`${name}Block`] = estimateBlockDaysAgo(i);
-  });
-  return blocks;
-}
-
 const formatPercent = (num: number) => `${num > 0 ? '+' : ''}${(num * 100).toFixed(2)}%`;
 
 const calculateLiquidity = (fyDai: any) =>
@@ -188,7 +182,7 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
   const { error, data } = useQuery(SERIES_QUERY, {
     variables: {
       symbol,
-      ...getBlockNums(),
+      ...getBlockNums(NUM_DAYS),
     },
   });
 
@@ -291,7 +285,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     query: SERIES_QUERY,
     variables: {
       symbol: query.symbol,
-      ...getBlockNums(),
+      ...getBlockNums(NUM_DAYS),
     },
   });
   if (result.data.now.length > 0) {

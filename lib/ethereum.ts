@@ -14,3 +14,31 @@ export const estimateCurrentBlock = () => {
 export const estimateBlock24hrAgo = () => estimateCurrentBlock() - BLOCKS_PER_DAY;
 
 export const estimateBlockDaysAgo = (numDays: number) => estimateCurrentBlock() - (BLOCKS_PER_DAY * numDays)
+
+const timePeriods = [
+  'now',
+  'yesterday',
+  'twoDaysAgo',
+  'threeDaysAgo',
+  'fourDaysAgo',
+  'fiveDaysAgo',
+  'sixDaysAgo',
+  'sevenDaysAgo',
+  'eightDaysAgo',
+  'nineDaysAgo',
+];
+
+export const getTimePeriods = (num: number) => {
+  if (num >= timePeriods.length) {
+    throw new Error('Time periods too large');
+  }
+  return timePeriods.slice(0, num);
+}
+
+export const getBlockNums = (num: number) => {
+  const blocks: any = {};
+  getTimePeriods(num).map((name: string, i: number) => {
+    blocks[`${name}Block`] = estimateBlockDaysAgo(i);
+  });
+  return blocks;
+}
