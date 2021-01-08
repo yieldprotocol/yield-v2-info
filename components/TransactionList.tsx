@@ -196,7 +196,7 @@ const eventAction = (event: any): string => {
     return `Swap ${event.amountDai < 0 ? 'Dai' : 'fyDai'} for ${event.amountDai < 0 ? 'fyDai' : 'Dai'}`;
   }
   if (event.__typename === 'Liquidity') {
-    return `${event.amountDai > 0 ? 'Add' : 'Remove'} Liquidity`;
+    return `${event.amountDai < 0 ? 'Add' : 'Remove'} Liquidity`;
   }
   if (event.__typename === 'Borrow') {
     return `${event.amountFYDai > 0 ? 'Borrow' : 'Repay'} against ${event.collateral}`;
