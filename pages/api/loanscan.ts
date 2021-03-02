@@ -25,8 +25,13 @@ const handler = async (_req: NextApiRequest, res: NextApiResponse) => {
   try {
     const client = createApolloClient()
     const result = await client.query({ query: APR_QUERY })
-    const topAPR = result.data.fydais.reduce((top: number, fyDai: any) =>
-      fyDai.apr > top ? parseFloat(fyDai.apr) : top, 0) / 100
+    const [topAPR, bottomAPR] = result.data.fydais
+      .reduce(([top, bottom]: [number, number], fyDai: any) => {
+        let _top = fyDai.apr > top ? parseFloat(fyDai.apr) : top
+        let _bottom = fyDai.apr > 0 && fyDai.apr < bottom ? parseFloat(fyDai.apr) : bottom
+        return [_top, _bottom]
+      }, [0, 100])
+      .map((apr: number) => apr / 100)
 
     res.json({
       lendRates: [
@@ -38,8 +43,8 @@ const handler = async (_req: NextApiRequest, res: NextApiResponse) => {
       ],
       borrowRates: [
         {
-          apy: apr2apy(topAPR),
-          apr: topAPR,
+          apy: apr2apy(bottomAPR),
+          apr: bottomAPR,
           tokenSymbol: 'DAI',
         },
       ],
