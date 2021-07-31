@@ -3,7 +3,7 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
 import { formatMaturity } from 'lib/format';
-import { estimateBlock24hrAgo } from 'lib/ethereum';
+import { getBlockDaysAgoCache } from 'lib/ethereum';
 import APRPill from './APRPill';
 
 const Table = styled.div`
@@ -92,7 +92,7 @@ const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 const MaturityList: React.FC = () => {
   const { error, data } = useQuery(ALL_MATURITIES_QUERY, {
     variables: {
-      yesterdayBlock: estimateBlock24hrAgo(),
+      yesterdayBlock: getBlockDaysAgoCache(1),
     },
   });
 

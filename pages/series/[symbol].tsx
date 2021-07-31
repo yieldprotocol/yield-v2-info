@@ -9,7 +9,7 @@ import APRPill from 'components/APRPill';
 import SeriesCharts, { ChartDay } from 'components/SeriesCharts';
 import TransactionList, { SERIES_TX_QUERY, NUM_ROWS, MAX_TIMESTAMP } from 'components/TransactionList';
 import { initializeApollo } from 'lib/apolloClient';
-import { getTimePeriods, getBlockNums } from 'lib/ethereum';
+import { getTimePeriods, getBlockNums, getBlockDaysAgo, setBlockDaysAgoCache } from 'lib/ethereum';
 import backArrow from 'assets/back.svg';
 
 const Toolbar = styled.div`
@@ -281,6 +281,12 @@ export default Series;
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const apolloClient = initializeApollo();
 
+  const blockNumsDaysAgo = await Promise.all([...new Array(10)].map(async (_, daysAgo: number) => {
+    const block = await getBlockDaysAgo(daysAgo);
+    setBlockDaysAgoCache(daysAgo, block);
+    return block;
+  }));
+
   const result = await apolloClient.query({
     query: SERIES_QUERY,
     variables: {
@@ -303,6 +309,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     props: {
       initialApolloState: apolloClient.cache.extract(),
       symbol: query.symbol,
+      daysAgoCache: blockNumsDaysAgo,
     },
   };
 };

@@ -5,7 +5,7 @@ import MaturityList, { ALL_MATURITIES_QUERY } from 'components/MaturityList';
 import TopVaultsList, { TOP_VAULTS_QUERY } from 'components/TopVaultsList';
 import StatBar, { STAT_BAR_QUERY } from 'components/StatBar';
 import { initializeApollo } from 'lib/apolloClient';
-import { estimateBlock24hrAgo, getBlockNums } from 'lib/ethereum';
+import { getBlockDaysAgo, setBlockDaysAgoCache, getBlockNums } from 'lib/ethereum';
 
 const Heading = styled.h2`
   font-family: Syne;
@@ -37,8 +37,16 @@ export default function Home() {
 export async function getStaticProps() {
   const apolloClient = initializeApollo();
 
+  const blockNumsDaysAgo = await Promise.all([...new Array(10)].map(async (_, daysAgo: number) => {
+    const block = await getBlockDaysAgo(daysAgo);
+    setBlockDaysAgoCache(daysAgo, block);
+    return block;
+  }));
+
   await Promise.all([
-    apolloClient.query({ query: ALL_MATURITIES_QUERY, variables: { yesterdayBlock: estimateBlock24hrAgo() } }),
+    apolloClient.query({ query: ALL_MATURITIES_QUERY, variables: {
+      yesterdayBlock: blockNumsDaysAgo[1],
+    } }),
     apolloClient.query({ query: STAT_BAR_QUERY }),
     apolloClient.query({ query: TOP_VAULTS_QUERY }),
     apolloClient.query({ query: FYDAI_CHART_QUERY, variables: getBlockNums(NUM_DAYS) }),
@@ -47,6 +55,7 @@ export async function getStaticProps() {
   return {
     props: {
       initialApolloState: apolloClient.cache.extract(),
+      daysAgoCache: blockNumsDaysAgo,
     },
     revalidate: 1,
   };

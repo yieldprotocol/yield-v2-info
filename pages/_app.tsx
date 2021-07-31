@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Head from 'next/head'
 import { AppProps } from 'next/app';
 import { ApolloProvider } from '@apollo/client'
 import { useApollo } from 'lib/apolloClient'
+import { setBlockDaysAgoCache } from 'lib/ethereum'
 import styled, { createGlobalStyle } from 'styled-components'
 import Header from 'components/Header';
 import ReactGA from 'react-ga';
@@ -31,11 +32,18 @@ ReactGA.initialize('UA-180935349-3');
 
 const App: React.FC<AppProps> = ({ Component, pageProps }) => {
   const apolloClient = useApollo(pageProps.initialApolloState)
+  const cacheInitialized = useRef(false);
 
   useEffect(() => {
     ReactGA.set({ page: window.location.pathname });
     ReactGA.pageview(window.location.pathname);
   }, [Component]);
+
+  if (pageProps.daysAgoCache && !cacheInitialized.current) {
+    pageProps.daysAgoCache.forEach((block: number, daysAgo: number) =>
+      setBlockDaysAgoCache(daysAgo, block));
+    cacheInitialized.current = true;
+  }
 
   return (
     <ApolloProvider client={apolloClient}>
