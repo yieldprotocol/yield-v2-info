@@ -57,21 +57,19 @@ const TableSubheader = styled.li`
 `
 
 export const ALL_MATURITIES_QUERY = gql`
-  query maturities($yesterdayBlock: Int!) {
-    fydais(orderBy: maturity) {
+  query maturities {
+    fytokens(orderBy: maturity) {
       symbol
+      name
       maturity
-      apr
-      poolDaiReserves
-      poolFYDaiReserves
-      currentFYDaiPriceInDai
-      totalTradingFeesInDai
-      totalVolumeDai
-    }
-
-    volYesterday: fydais(block: {number: $yesterdayBlock}) {
-      symbol
-      totalVolumeDai
+      pools {
+        fyTokenReserves
+        baseReserves
+      }
+      underlyingAsset {
+        name
+        symbol
+      }
     }
   }
 `
@@ -101,15 +99,16 @@ const MaturityList: React.FC = () => {
   }
 
   const now = Date.now() / 1000;
-  const matured = data.fydais.filter((fydai: any) => parseInt(fydai.maturity) < now);
-  const active = data.fydais.filter((fydai: any) => parseInt(fydai.maturity) > now);
+  const matured = data.fytokens.filter((fydai: any) => parseInt(fydai.maturity) < now);
+  const active = data.fytokens.filter((fydai: any) => parseInt(fydai.maturity) > now);
 
-  const volumeYesterdayMapping = createVolumeYesterdayMapping(data.volYesterday);
+  // const volumeYesterdayMapping = createVolumeYesterdayMapping(data.volYesterday);
 
   return (
     <Table>
       <Heading>
         <HeadingCol width={80}>APR</HeadingCol>
+        <HeadingCol width={80}>Asset</HeadingCol>
         <HeadingCol flex={1}>Series</HeadingCol>
         <HeadingCol width={130} flex={0.6}>Liquidity</HeadingCol>
         <HeadingCol width={120} flex={0.5}>Volume (24 hrs)</HeadingCol>
@@ -122,15 +121,16 @@ const MaturityList: React.FC = () => {
             <Link href={`/series/${fydai.symbol}`} passHref>
               <TableLink>
                 <Cell width={80}>
-                  <APRPill apr={parseFloat(fydai.apr)} series={fydai.symbol} />
+                  <APRPill apr={/*parseFloat(fydai.apr)*/0} series={fydai.symbol} />
                 </Cell>
+                <Cell width={80}>{fydai.underlyingAsset.symbol}</Cell>
                 <Cell flex={1}>{formatMaturity(fydai.maturity)}</Cell>
-                <Cell width={130} flex={0.6}>${calculateLiquidity(fydai).toLocaleString(undefined, localeOptions)}</Cell>
+                <Cell width={130} flex={0.6}>${/*calculateLiquidity(fydai).toLocaleString(undefined, localeOptions)*/0}</Cell>
                 <Cell width={120} flex={0.5}>
-                  ${(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)}
+                  $0{/*(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)*/}
                 </Cell>
                 <Cell width={120} flex={0.5}>
-                  ${parseFloat(fydai.totalTradingFeesInDai).toLocaleString(undefined, localeOptions)}
+                  ${/*parseFloat(fydai.totalTradingFeesInDai).toLocaleString(undefined, localeOptions)*/}
                 </Cell>
               </TableLink>
             </Link>
@@ -146,13 +146,14 @@ const MaturityList: React.FC = () => {
                 <Link href={`/series/${fydai.symbol}`} passHref>
                   <TableLink>
                     <Cell width={80} />
+                    <Cell width={80}>{fydai.underlyingAsset.symbol}</Cell>
                     <Cell flex={1}>{formatMaturity(fydai.maturity)}</Cell>
-                    <Cell width={130} flex={0.6}>${calculateLiquidity(fydai).toLocaleString(undefined, localeOptions)}</Cell>
+                    <Cell width={130} flex={0.6}>${/*calculateLiquidity(fydai).toLocaleString(undefined, localeOptions)*/0}</Cell>
                     <Cell width={120} flex={0.5}>
-                      ${(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)}
+                      $0{/*(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)*/}
                     </Cell>
                     <Cell width={120} flex={0.5}>
-                      ${parseFloat(fydai.totalTradingFeesInDai).toLocaleString(undefined, localeOptions)}
+                      ${/*parseFloat(fydai.totalTradingFeesInDai).toLocaleString(undefined, localeOptions)*/}
                     </Cell>
                   </TableLink>
                 </Link>

@@ -21,15 +21,15 @@ export default function Home() {
         <title>Borrowing & Lending Statistics - Yield</title>
       </Head>
 
-      <StatBar />
+      {/*<StatBar />*/}
 
-      <FYDaiChartBox />
+      {/*<FYDaiChartBox />*/}
       
       <Heading>Series Information</Heading>
       <MaturityList />
 
-      <Heading>Accounts</Heading>
-      <TopVaultsList />
+      {/*<Heading>Accounts</Heading>
+      <TopVaultsList />*/}
     </div>
   );
 };
@@ -37,26 +37,24 @@ export default function Home() {
 export async function getStaticProps() {
   const apolloClient = initializeApollo();
 
-  const blockNumsDaysAgo = await Promise.all([...new Array(10)].map(async (_, daysAgo: number) => {
-    const block = await getBlockDaysAgo(daysAgo);
-    setBlockDaysAgoCache(daysAgo, block);
-    return block;
-  }));
+  // const blockNumsDaysAgo = await Promise.all([...new Array(10)].map(async (_, daysAgo: number) => {
+  //   const block = await getBlockDaysAgo(daysAgo);
+  //   setBlockDaysAgoCache(daysAgo, block);
+  //   return block;
+  // }));
 
   await Promise.all([
-    apolloClient.query({ query: ALL_MATURITIES_QUERY, variables: {
-      yesterdayBlock: blockNumsDaysAgo[1],
-    } }),
-    apolloClient.query({ query: STAT_BAR_QUERY }),
-    apolloClient.query({ query: TOP_VAULTS_QUERY }),
-    apolloClient.query({ query: FYDAI_CHART_QUERY, variables: getBlockNums(NUM_DAYS) }),
+    apolloClient.query({ query: ALL_MATURITIES_QUERY }),
+    // apolloClient.query({ query: STAT_BAR_QUERY }),
+    // apolloClient.query({ query: TOP_VAULTS_QUERY }),
+    // apolloClient.query({ query: FYDAI_CHART_QUERY, variables: getBlockNums(NUM_DAYS) }),
   ]);
 
   return {
     props: {
       initialApolloState: apolloClient.cache.extract(),
-      daysAgoCache: blockNumsDaysAgo,
+      // daysAgoCache: blockNumsDaysAgo,
     },
-    revalidate: 1,
+    revalidate: 5,
   };
 }
