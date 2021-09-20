@@ -2,6 +2,7 @@ import React, { Fragment } from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
+import Numeral from 'numeral';
 import { formatMaturity } from 'lib/format';
 import { getBlockDaysAgoCache } from 'lib/ethereum';
 import APRPill from './APRPill';
@@ -65,6 +66,7 @@ export const ALL_MATURITIES_QUERY = gql`
       pools {
         fyTokenReserves
         baseReserves
+        totalTradingFeesInBase
       }
       underlyingAsset {
         name
@@ -130,7 +132,10 @@ const MaturityList: React.FC = () => {
                   $0{/*(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)*/}
                 </Cell>
                 <Cell width={120} flex={0.5}>
-                  ${/*parseFloat(fydai.totalTradingFeesInDai).toLocaleString(undefined, localeOptions)*/}
+                  {Numeral(fydai.pools
+                    .reduce((acc: number, pool: any) => acc + parseFloat(pool.totalTradingFeesInBase), 0)
+                  ).format('0.[00]a')}
+                  {' '}{fydai.underlyingAsset.symbol}
                 </Cell>
               </TableLink>
             </Link>
@@ -153,7 +158,10 @@ const MaturityList: React.FC = () => {
                       $0{/*(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)*/}
                     </Cell>
                     <Cell width={120} flex={0.5}>
-                      ${/*parseFloat(fydai.totalTradingFeesInDai).toLocaleString(undefined, localeOptions)*/}
+                      {Numeral(fydai.pools
+                        .reduce((acc: number, pool: any) => acc + parseFloat(pool.totalTradingFeesInBase), 0)
+                      ).format('0.[00]a')}
+                      {' '}{fydai.underlyingAsset.symbol}
                     </Cell>
                   </TableLink>
                 </Link>
