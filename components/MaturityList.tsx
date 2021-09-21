@@ -64,9 +64,11 @@ export const ALL_MATURITIES_QUERY = gql`
       name
       maturity
       pools {
+        apr
         fyTokenReserves
         baseReserves
         totalTradingFeesInBase
+        currentFYTokenPriceInBase
       }
       underlyingAsset {
         name
@@ -77,7 +79,10 @@ export const ALL_MATURITIES_QUERY = gql`
 `
 
 const calculateLiquidity = (fyDai: any) =>
-  parseFloat(fyDai.poolDaiReserves) + (parseFloat(fyDai.poolFYDaiReserves) * parseFloat(fyDai.currentFYDaiPriceInDai));
+  fyDai.pools.reduce(
+    (acc: number, pool: any) => acc + parseFloat(pool.baseReserves) + (pool.fyTokenReserves * pool.currentFYTokenPriceInBase),
+  0)
+  // parseFloat(fyDai.poolDaiReserves) + (parseFloat(fyDai.poolFYDaiReserves) * parseFloat(fyDai.currentFYDaiPriceInDai));
 
 const createVolumeYesterdayMapping = (fydais: any[]) => {
   const mapping: { [symbol: string]: number } = {};
@@ -123,11 +128,14 @@ const MaturityList: React.FC = () => {
             <Link href={`/series/${fydai.symbol}`} passHref>
               <TableLink>
                 <Cell width={80}>
-                  <APRPill apr={/*parseFloat(fydai.apr)*/0} series={fydai.symbol} />
+                  <APRPill apr={parseFloat(fydai.pools[0].apr)} series={fydai.symbol} />
                 </Cell>
                 <Cell width={80}>{fydai.underlyingAsset.symbol}</Cell>
                 <Cell flex={1}>{formatMaturity(fydai.maturity)}</Cell>
-                <Cell width={130} flex={0.6}>${/*calculateLiquidity(fydai).toLocaleString(undefined, localeOptions)*/0}</Cell>
+                <Cell width={130} flex={0.6}>
+                  {Numeral(calculateLiquidity(fydai)).format('0.[00]a')}
+                  {' '}{fydai.underlyingAsset.symbol}
+                </Cell>
                 <Cell width={120} flex={0.5}>
                   $0{/*(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)*/}
                 </Cell>
@@ -153,7 +161,10 @@ const MaturityList: React.FC = () => {
                     <Cell width={80} />
                     <Cell width={80}>{fydai.underlyingAsset.symbol}</Cell>
                     <Cell flex={1}>{formatMaturity(fydai.maturity)}</Cell>
-                    <Cell width={130} flex={0.6}>${/*calculateLiquidity(fydai).toLocaleString(undefined, localeOptions)*/0}</Cell>
+                    <Cell width={130} flex={0.6}>
+                      {Numeral(calculateLiquidity(fydai)).format('0.[00]a')}
+                      {' '}{fydai.underlyingAsset.symbol}
+                    </Cell>
                     <Cell width={120} flex={0.5}>
                       $0{/*(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)*/}
                     </Cell>
