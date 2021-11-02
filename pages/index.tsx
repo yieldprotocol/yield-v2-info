@@ -21,7 +21,7 @@ export default function Home() {
         <title>Borrowing &amp; Lending Statistics - Yield</title>
       </Head>
 
-      {/*<StatBar />*/}
+      <StatBar />
 
       {/*<FYDaiChartBox />*/}
       
@@ -45,7 +45,7 @@ export async function getStaticProps() {
 
   await Promise.all([
     apolloClient.query({ query: ALL_MATURITIES_QUERY }),
-    // apolloClient.query({ query: STAT_BAR_QUERY }),
+    apolloClient.query({ query: STAT_BAR_QUERY }),
     apolloClient.query({ query: TOP_VAULTS_QUERY }),
     // apolloClient.query({ query: FYDAI_CHART_QUERY, variables: getBlockNums(NUM_DAYS) }),
   ]);

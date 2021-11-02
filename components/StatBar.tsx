@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
 
@@ -54,22 +54,86 @@ const Column = styled.div`
 
 export const STAT_BAR_QUERY = gql`
   query stats {
-    yield(id: "1") {
-      collateralETH
-      collateralETHInUSD
-      collateralChai
-      collateralChaiInDai
-      totalPoolDai
-      totalPoolFYDai
-      poolTLVInDai
+    assets {
+      symbol
+      totalInPools
+      totalCollateral
+      totalDebt
     }
-
-    fydais {
-      totalSupply
-      currentFYDaiPriceInDai
+    fytokens {
+      underlyingAsset {
+        symbol
+      }
+      totalInPools
+      pools {
+        baseReserves
+        currentFYTokenPriceInBase
+      }
     }
   }
 `;
+
+const ETH_ORACLE = '0x00c7a37b03690fb9f41b5c5af8131735c7275446';
+const BTC_ORACLE = '0xae74faa92cb67a95ebcab07358bc222e33a34da7';
+
+const processSubgraphData = (data: any) => {
+  const [result, setResult] = useState<any>({ tvl: 0, totalDebt: 0, prices: { USDC: 1, DAI: 1, USDT: 1 } });
+
+  const getPrices = async () => {
+    const req = await fetch('https://gql.graph.chain.link/subgraphs/name/ethereum-mainnet', {
+      headers: {
+        accept: "application/json",
+      },
+      body: JSON.stringify({
+        query: `query {
+  feeds(where: {id_in: ["${ETH_ORACLE}", "${BTC_ORACLE}"]}) {
+    id
+    rounds (orderBy: number, orderDirection: desc, first: 1) {
+      value
+    }
+  }
+}`,
+      }),
+      method: "POST",
+    });
+    const json = await req.json();
+
+    for (const feed in json.data.feeds) {
+      if (feed.id === ETH_ORACLE) {
+        setResult((value: any) => ({ ...value, prices: { ...value.prices, WETH: feed.rounds[0].value / 1e9 } }))
+      }
+      if (feed.id === BTC_ORACLE) {
+        setResult((value: any) => ({ ...value, prices: { ...value.prices, WETH: feed.rounds[0].value / 1e9 } }))
+      }
+    }
+  }
+
+  useEffect(() => {
+    let tvl = 0;
+    let totalDebt = 0;
+
+    for (const asset of data.assets) {
+      if (result.prices[asset.symbol]) {
+        tvl += (parseFloat(asset.totalInPools) + parseFloat(asset.totalCollateral)) * result.prices[asset.symbol];
+        totalDebt += asset.totalDebt * result.prices[asset.symbol];
+      }
+    }
+
+    for (const fyToken of data.fytokens) {
+      if (result.prices[fyToken.underlyingAsset.symbol]) {
+        tvl += fyToken.totalInPools * result.prices[fyToken.underlyingAsset.symbol];
+      }
+    }
+
+    setResult((_result: any) => ({ ..._result, tvl, totalDebt }));
+  }, [data, result.prices]);
+
+  useEffect(() => {
+    getPrices();
+  }, []);
+
+  return result;
+}
 
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
@@ -80,43 +144,21 @@ const StatBar = () => {
     return <pre>{error}</pre>
   }
 
-  const {
-    collateralETH, collateralChai, poolTLVInDai, collateralETHInUSD, collateralChaiInDai
-  } = data.yield;
-
-  const tlv = parseFloat(poolTLVInDai) + parseFloat(collateralETHInUSD) + parseFloat(collateralChaiInDai);
-  const totalBorrowed = data.fydais.reduce((total: number, fydai: any) =>
-    total + (fydai.totalSupply * fydai.currentFYDaiPriceInDai), 0);
+  const { tvl, totalDebt } = processSubgraphData(data);
 
   return (
     <Bar>
       <Column>
         <Card>
-          <TLV>${totalBorrowed.toLocaleString(undefined, localeOptions)}</TLV>
+          <TLV>${totalDebt.toLocaleString(undefined, localeOptions)}</TLV>
           <TLVLabel>Total Borrowed (USD)</TLVLabel>
-        </Card>
-
-        <Card>
-          <ValRow>
-            <Val>{parseFloat(collateralETH).toLocaleString(undefined, localeOptions)} ETH</Val>
-            <Val>{parseFloat(collateralChai).toLocaleString(undefined, localeOptions)} Chai</Val>
-          </ValRow>
-          <Label>Collateral</Label>
         </Card>
       </Column>
 
       <Column>
         <Card>
-          <TLV>${tlv.toLocaleString(undefined, localeOptions)}</TLV>
+          <TLV>${tvl.toLocaleString(undefined, localeOptions)}</TLV>
           <TLVLabel>Total Value Locked (USD)</TLVLabel>
-        </Card>
-
-        <Card>
-          <ValRow>
-            <Val>{parseFloat(data.yield.totalPoolDai).toLocaleString(undefined, localeOptions)} Dai</Val>
-            <Val>{parseFloat(data.yield.totalPoolFYDai).toLocaleString(undefined, localeOptions)} fyDai</Val>
-          </ValRow>
-          <Label>Assets in pools</Label>
         </Card>
       </Column>
     </Bar>
