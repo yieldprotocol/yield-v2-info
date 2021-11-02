@@ -4,8 +4,8 @@ import styled from 'styled-components';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { gql, useQuery } from '@apollo/client'
-import VaultSeriesList from 'components/VaultSeriesList';
-import TransactionList, { VAULT_TX_QUERY, NUM_ROWS, MAX_TIMESTAMP } from 'components/TransactionList';
+// import VaultSeriesList from 'components/VaultSeriesList';
+// import TransactionList, { VAULT_TX_QUERY, NUM_ROWS, MAX_TIMESTAMP } from 'components/TransactionList';
 import { initializeApollo } from 'lib/apolloClient';
 import backArrow from 'assets/back.svg';
 
@@ -42,30 +42,18 @@ const BackButton = styled.a`
   }
 `;
 
-const EtherscanLink = styled.a`
-  font-weight: bold;
-  font-size: 14px;
-  color: #ffffff;
-`;
-
 const Title = styled.h1`
   font-weight: 600;
   font-size: 24px;
 `;
-
 
 const VaultStatBar = styled.dl`
   display: flex;
   height: 44px;
 `;
 
-const VaultStat = styled.div``;
-
-const Heading = styled.h2`
-  font-family: Syne;
-  font-weight: bold;
-  font-size: 24px;
-  color: #ffffff;
+const VaultStat = styled.div`
+  margin-right: 8px;
 `;
 
 const Def = styled.dt`
@@ -84,15 +72,21 @@ export const VAULT_QUERY = gql`
   query getVault($address: String!) {
     vault(id: $address) {
       id
-      collateralETH
-      collateralChai
-      fyDais {
-        fyDai {
-          maturity
-          apr
+      owner
+      debtAmount
+      collateralAmount
+      collateral {
+        asset {
           symbol
         }
-        totalFYDaiDebt
+      }
+      series {
+        baseAsset {
+          symbol
+        }
+        fyToken {
+          symbol
+        }
       }
     }
   }
@@ -107,45 +101,57 @@ const VaultDetails: React.FC<{ address: string }> = ({ address }) => {
     return <pre>{error}</pre>
   }
 
+  if (!data.vault) {
+    return <div>Vault not found</div>
+  }
+
   return (
     <div>
       <Head>
-        <title>Account {address} - Yield</title>
+        <title>Vault Details - Yield</title>
       </Head>
 
       <Toolbar>
         <Link href="/vaults" passHref>
           <BackButton>Back to accounts</BackButton>
         </Link>
-
-        <EtherscanLink href={`https://etherscan.io/address/${address}`}>View on Etherscan</EtherscanLink>
       </Toolbar>
 
-      <Title>{address}</Title>
+      <Title>Vault Details</Title>
+      <div>ID: {data.vault.id} - Owner: {data.vault.owner}</div>
 
       {data.vault && (
         <Fragment>
           <VaultStatBar>
-            {data.vault.collateralETH !== '0' && (
+            {data.vault.collateralAmount !== '0' && (
               <VaultStat>
-                <Def>ETH Collateral</Def>
-                <Val>{parseFloat(data.vault.collateralETH).toLocaleString(undefined, localeOptions)}</Val>
+                <Def>Collateral</Def>
+                <Val>
+                  {parseFloat(data.vault.collateralAmount).toLocaleString(undefined, localeOptions)}
+                  {' '}
+                  {data.vault.collateral.asset.symbol}
+                </Val>
               </VaultStat>
             )}
-            {data.vault.collateralChai !== '0' && (
+
+            {data.vault.debtAmount !== '0' && (
               <VaultStat>
-                <Def>Chai Collateral</Def>
-                <Val>{parseFloat(data.vault.collateralChai).toLocaleString(undefined, localeOptions)}</Val>
+                <Def>Debt</Def>
+                <Val>
+                  {parseFloat(data.vault.debtAmount).toLocaleString(undefined, localeOptions)}
+                  {' '}
+                  {data.vault.series.baseAsset.symbol}
+                </Val>
               </VaultStat>
             )}
           </VaultStatBar>
 
-          <VaultSeriesList data={data.vault.fyDais} />
+          {/*<VaultSeriesList data={data.vault.fyDais} />*/}
         </Fragment>
       )}
 
-      <Heading>Transactions</Heading>
-      <TransactionList vault={address} />
+      {/*<Heading>Transactions</Heading>
+      <TransactionList vault={address} />*/}
     </div>
   );
 };
@@ -159,14 +165,14 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     query: VAULT_QUERY,
     variables: { address: query.address },
   });
-  await apolloClient.query({
-    query: VAULT_TX_QUERY,
-    variables: {
-      vault: query.address,
-      limit: NUM_ROWS,
-      before: MAX_TIMESTAMP,
-    },
-  });
+  // await apolloClient.query({
+  //   query: VAULT_TX_QUERY,
+  //   variables: {
+  //     vault: query.address,
+  //     limit: NUM_ROWS,
+  //     before: MAX_TIMESTAMP,
+  //   },
+  // });
 
   return {
     props: {
