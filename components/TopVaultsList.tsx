@@ -55,17 +55,24 @@ const TableLink = styled.a`
 
 export const TOP_VAULTS_QUERY = gql`
   query vaults {
-    vaults(orderBy: totalFYDaiDebt, orderDirection: desc, first: 10) {
+    vaults (orderBy: debtAmount, orderDirection: desc, first: 10) {
       id
-      collateralETH
-      collateralChai
-      totalFYDaiDebt
-      fyDais(where:{ totalFYDaiDebt_gt: "0"}) {
-        fyDai {
-          maturity
-          currentFYDaiPriceInDai
+      owner
+      debtAmount
+      collateralAmount
+      collateral {
+        asset {
+          name
+          symbol
         }
-        totalFYDaiDebt
+      }
+      series {
+        fyToken {
+          maturity
+        }
+        baseAsset {
+          symbol
+        }
       }
     }
   }
@@ -88,7 +95,6 @@ const TopVaultList: React.FC = () => {
       <Heading>
         <HeadingCol width={80} flex={0.8}>Account</HeadingCol>
         <HeadingCol width={100} flex={0.5}>Outstanding Debt</HeadingCol>
-        <HeadingCol width={130} flex={1}>Per Series Debt</HeadingCol>
         <HeadingCol width={100} flex={0.4}>Collateral</HeadingCol>
       </Heading>
 
@@ -97,25 +103,14 @@ const TopVaultList: React.FC = () => {
           <TableLI key={vault.id}>
             <Link href={`/vaults/${vault.id}`} passHref>
               <TableLink>
-                <Cell width={80} flex={0.8}>{vault.id}</Cell>
-                {/* TODO: convert totalFYDaiDebt to totalDaiDebt */}
-                <Cell width={100} flex={0.5}>${totalDebt(vault).toLocaleString(undefined, localeOptions)}</Cell>
-                <Cell width={130} flex={1}>
-                  {vault.fyDais.map((maturity: any) => (
-                    <Line key={maturity.fyDai.maturity}>
-                      {formatMaturity(maturity.fyDai.maturity)}
-                      {' • $'}
-                      {(parseFloat(maturity.totalFYDaiDebt) * parseFloat(maturity.fyDai.currentFYDaiPriceInDai)).toLocaleString(undefined, localeOptions)}
-                    </Line>
-                  ))}
+                <Cell width={80} flex={0.8}>{vault.owner}</Cell>
+                <Cell width={100} flex={0.5}>
+                  {parseFloat(vault.debtAmount).toLocaleString(undefined, localeOptions)}
+                  {' '}{vault.series.baseAsset.symbol}
                 </Cell>
                 <Cell width={100} flex={0.4}>
-                  {vault.collateralETH !== '0' && (
-                    <Line>{parseFloat(vault.collateralETH).toLocaleString(undefined, localeOptions)} ETH</Line>
-                  )}
-                  {vault.collateralChai !== '0' && (
-                    <Line>{parseFloat(vault.collateralChai).toLocaleString(undefined, localeOptions)} Chai</Line>
-                  )}
+                  {parseFloat(vault.collateralAmount).toLocaleString(undefined, localeOptions)}
+                  {' '}{vault.collateral.asset.symbol}
                 </Cell>
               </TableLink>
             </Link>

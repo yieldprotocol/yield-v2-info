@@ -18,7 +18,7 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Borrowing & Lending Statistics - Yield</title>
+        <title>Borrowing &amp; Lending Statistics - Yield</title>
       </Head>
 
       {/*<StatBar />*/}
@@ -28,8 +28,8 @@ export default function Home() {
       <Heading>Series Information</Heading>
       <MaturityList />
 
-      {/*<Heading>Accounts</Heading>
-      <TopVaultsList />*/}
+      <Heading>Vaults</Heading>
+      <TopVaultsList />
     </div>
   );
 };
@@ -46,7 +46,7 @@ export async function getStaticProps() {
   await Promise.all([
     apolloClient.query({ query: ALL_MATURITIES_QUERY }),
     // apolloClient.query({ query: STAT_BAR_QUERY }),
-    // apolloClient.query({ query: TOP_VAULTS_QUERY }),
+    apolloClient.query({ query: TOP_VAULTS_QUERY }),
     // apolloClient.query({ query: FYDAI_CHART_QUERY, variables: getBlockNums(NUM_DAYS) }),
   ]);
 
