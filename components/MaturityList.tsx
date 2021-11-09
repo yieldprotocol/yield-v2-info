@@ -58,22 +58,28 @@ const TableSubheader = styled.li`
 `
 
 export const ALL_MATURITIES_QUERY = gql`
-  query maturities {
+  query maturities($blockYesterday: Int!) {
     fytokens(orderBy: maturity) {
       symbol
       name
       maturity
       pools {
+        id
         apr
         fyTokenReserves
         baseReserves
         totalTradingFeesInBase
         currentFYTokenPriceInBase
+        totalVolumeInBase
       }
       underlyingAsset {
         name
         symbol
       }
+    }
+    yesterdayPools: pools(block: { number: $blockYesterday }) {
+      id
+      totalVolumeInBase
     }
   }
 `
@@ -92,12 +98,16 @@ const createVolumeYesterdayMapping = (fydais: any[]) => {
   return mapping;
 }
 
-const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+const calculateVolume = (pools: any[], yesterdayPools: any) =>
+  pools.reduce((total: number, pool: any) => yesterdayPools[pool.id]
+    ? total + (pool.totalVolumeInBase - yesterdayPools[pool.id])
+    : total,
+  0)
 
 const MaturityList: React.FC = () => {
   const { error, data } = useQuery(ALL_MATURITIES_QUERY, {
     variables: {
-      yesterdayBlock: getBlockDaysAgoCache(1),
+      blockYesterday: getBlockDaysAgoCache(1),
     },
   });
 
@@ -105,11 +115,15 @@ const MaturityList: React.FC = () => {
     return <pre>{error}</pre>
   }
 
+  const yesterdayVolumesPerPool: { [id: string]: number } = {};
+
+  for (const pool of data.yesterdayPools) {
+    yesterdayVolumesPerPool[pool.id] = parseFloat(pool.totalVolumeInBase)
+  }
+
   const now = Date.now() / 1000;
   const matured = data.fytokens.filter((fydai: any) => parseInt(fydai.maturity) < now);
   const active = data.fytokens.filter((fydai: any) => parseInt(fydai.maturity) > now);
-
-  // const volumeYesterdayMapping = createVolumeYesterdayMapping(data.volYesterday);
 
   return (
     <Table>
@@ -137,7 +151,8 @@ const MaturityList: React.FC = () => {
                   {' '}{fydai.underlyingAsset.symbol}
                 </Cell>
                 <Cell width={120} flex={0.5}>
-                  $0{/*(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)*/}
+                  {Numeral(calculateVolume(fydai.pools, yesterdayVolumesPerPool)).format('0.[00]a')}
+                  {' '}{fydai.underlyingAsset.symbol}
                 </Cell>
                 <Cell width={120} flex={0.5}>
                   {Numeral(fydai.pools
@@ -166,7 +181,8 @@ const MaturityList: React.FC = () => {
                       {' '}{fydai.underlyingAsset.symbol}
                     </Cell>
                     <Cell width={120} flex={0.5}>
-                      $0{/*(parseFloat(fydai.totalVolumeDai) - volumeYesterdayMapping[fydai.symbol]).toLocaleString(undefined, localeOptions)*/}
+                      {Numeral(calculateVolume(fydai.pools, yesterdayVolumesPerPool)).format('0.[00]a')}
+                      {' '}{fydai.underlyingAsset.symbol}
                     </Cell>
                     <Cell width={120} flex={0.5}>
                       {Numeral(fydai.pools

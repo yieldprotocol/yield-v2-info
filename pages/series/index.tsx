@@ -3,7 +3,7 @@ import Head from 'next/head';
 import styled from 'styled-components';
 import MaturityList, { ALL_MATURITIES_QUERY } from 'components/MaturityList';
 import { initializeApollo } from 'lib/apolloClient';
-import { getBlockDaysAgo, setBlockDaysAgoCache } from 'lib/ethereum';
+import { getBlocksDaysAgoCache, setBlockDaysAgoCache, getBlocksDaysAgo } from 'lib/ethereum';
 
 const HeadingBar = styled.div`
   display: flex;
@@ -36,18 +36,16 @@ export default SeriesPage;
 export async function getStaticProps() {
   const apolloClient = initializeApollo();
 
-  const blockNumsDaysAgo = await Promise.all([...new Array(10)].map(async (_, daysAgo: number) => {
-    const block = await getBlockDaysAgo(daysAgo);
-    setBlockDaysAgoCache(daysAgo, block);
-    return block;
-  }));
+  const [blockNow, blockYesterday] = await getBlocksDaysAgo([0, 1])
+  setBlockDaysAgoCache(0, blockNow);
+  setBlockDaysAgoCache(1, blockYesterday);
 
-  await apolloClient.query({ query: ALL_MATURITIES_QUERY, variables: { yesterdayBlock: blockNumsDaysAgo[1] } });
+  await apolloClient.query({ query: ALL_MATURITIES_QUERY, variables: { blockYesterday } });
 
   return {
     props: {
       initialApolloState: apolloClient.cache.extract(),
-      daysAgoCache: blockNumsDaysAgo,
+      daysAgoCache: getBlocksDaysAgoCache(),
     },
     revalidate: 1,
   };

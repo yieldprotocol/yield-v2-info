@@ -40,8 +40,8 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
   }, [Component]);
 
   if (pageProps.daysAgoCache && !cacheInitialized.current) {
-    pageProps.daysAgoCache.forEach((block: number, daysAgo: number) =>
-      setBlockDaysAgoCache(daysAgo, block));
+    Object.entries(pageProps.daysAgoCache).forEach(([daysAgo, block]: [string, any]) =>
+      setBlockDaysAgoCache(parseInt(daysAgo), block));
     cacheInitialized.current = true;
   }
 
