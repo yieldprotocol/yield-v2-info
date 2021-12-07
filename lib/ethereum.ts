@@ -31,7 +31,7 @@ export const estimateCurrentBlock = () => {
 };
 
 export const getBlocksDaysAgo = async (days: number[]) => {
-  const timestamps = days.map(numDays => numDays > 6
+  const timestamps = days.map(numDays => numDays > 0
     ? Math.floor((new Date()).getTime() / 1000) - (ONE_DAY * numDays)
     : Math.floor((new Date()).getTime() / 1000) - 60)
 
