@@ -60,6 +60,7 @@ const TableSubheader = styled.li`
 export const ALL_MATURITIES_QUERY = gql`
   query maturities($blockYesterday: Int!) {
     fytokens(orderBy: maturity) {
+      id
       symbol
       name
       maturity
@@ -89,14 +90,6 @@ const calculateLiquidity = (fyDai: any) =>
     (acc: number, pool: any) => acc + parseFloat(pool.baseReserves) + (pool.fyTokenReserves * pool.currentFYTokenPriceInBase),
   0)
   // parseFloat(fyDai.poolDaiReserves) + (parseFloat(fyDai.poolFYDaiReserves) * parseFloat(fyDai.currentFYDaiPriceInDai));
-
-const createVolumeYesterdayMapping = (fydais: any[]) => {
-  const mapping: { [symbol: string]: number } = {};
-  for (const { symbol, totalVolumeDai } of fydais) {
-    mapping[symbol] = parseFloat(totalVolumeDai);
-  }
-  return mapping;
-}
 
 const calculateVolume = (pools: any[], yesterdayPools: any) =>
   pools.reduce((total: number, pool: any) => yesterdayPools[pool.id]
@@ -137,9 +130,9 @@ const MaturityList: React.FC = () => {
       </Heading>
 
       <TableBody>
-        {active.map((fydai: any) => (
-          <TableLI key={fydai.symbol}>
-            <Link href={`/series/${fydai.symbol}`} passHref>
+        {active.map((fydai: any) => fydai.underlyingAsset && (
+          <TableLI key={fydai.id}>
+            <Link href={`/series/${fydai.id}`} passHref>
               <TableLink>
                 <Cell width={80}>
                   <APRPill apr={parseFloat(fydai.pools[0].apr)} series={fydai.symbol} />

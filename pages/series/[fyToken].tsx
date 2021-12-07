@@ -7,7 +7,7 @@ import { gql, useQuery } from '@apollo/client'
 import { formatMaturity } from 'lib/format';
 import APRPill from 'components/APRPill';
 import SeriesCharts, { ChartDay } from 'components/SeriesCharts';
-import TransactionList, { SERIES_TX_QUERY, NUM_ROWS, MAX_TIMESTAMP } from 'components/TransactionList';
+// import TransactionList, { SERIES_TX_QUERY, NUM_ROWS, MAX_TIMESTAMP } from 'components/TransactionList';
 import { initializeApollo } from 'lib/apolloClient';
 import { getTimePeriods, getBlockNums, getBlockDaysAgo, setBlockDaysAgoCache } from 'lib/ethereum';
 import backArrow from 'assets/back.svg';
@@ -119,40 +119,44 @@ const Percent = styled.div<{ negative?: boolean }>`
   color: ${props => props.negative ? '#F4B731' : '#6FCF97'};
 `;
 
-const Heading = styled.h2`
-  font-family: Syne;
-  font-weight: bold;
-  font-size: 24px;
-  color: #ffffff;
-`;
+// const Heading = styled.h2`
+//   font-family: Syne;
+//   font-weight: bold;
+//   font-size: 24px;
+//   color: #ffffff;
+// `;
 
 const NUM_DAYS = 9;
 
 const timePeriods = getTimePeriods(NUM_DAYS);
 
 const SERIES_QUERY = gql`
-  query getMaturity($symbol: String!, ${timePeriods.slice(1).map((name: string) => `$${name}Block: Int!`).join(', ')}) {
-    now: fydais(where:{ symbol: $symbol }) {
+  query getMaturity($id: String!, ${timePeriods.slice(1).map((name: string) => `$${name}Block: Int!`).join(', ')}) {
+    now: fytoken(id: $id) {
       id
-      address
       symbol
+      decimals
       maturity
-      apr
       totalSupply
-      poolDaiReserves
-      poolFYDaiReserves
-      currentFYDaiPriceInDai
-      totalVolumeDai
+      pools {
+        apr
+        fyTokenReserves
+        baseReserves
+        currentFYTokenPriceInBase
+        totalVolumeInBase
+      }
     }
 
     ${timePeriods.slice(1).map((name: string) => `
-      ${name}: fydais(where: { symbol: $symbol }, block: {number: $${name}Block }) {
+      ${name}: fytoken(id: $id, block: {number: $${name}Block }) {
         totalSupply
-        totalVolumeDai
-        poolDaiReserves
-        poolFYDaiReserves
-        currentFYDaiPriceInDai
-        apr
+        pools {
+          apr
+          fyTokenReserves
+          baseReserves
+          currentFYTokenPriceInBase
+          totalVolumeInBase
+        }
       }
     `)}
   }
@@ -160,28 +164,63 @@ const SERIES_QUERY = gql`
 
 const formatPercent = (num: number) => `${num > 0 ? '+' : ''}${(num * 100).toFixed(2)}%`;
 
-const calculateLiquidity = (fyDai: any) =>
-  parseFloat(fyDai.poolDaiReserves) + (parseFloat(fyDai.poolFYDaiReserves) * parseFloat(fyDai.currentFYDaiPriceInDai));
+const calculateLiquidity = (fytoken: any) => {
+  let liquidity = 0;
+  for (const pool of (fytoken?.pools || [])) {
+    liquidity += parseFloat(pool.baseReserves) + (pool.fyTokenReserves * pool.currentFYTokenPriceInBase)
+  }
+  return liquidity;
+}
 
-const calculateTotalBorrowed = (fyDai: any) => fyDai.totalSupply * fyDai.currentFYDaiPriceInDai;
+const getAPR = (fytoken: any) => {
+  let mostBase = 0;
+  let apr = 0;
+  for (const pool of (fytoken?.pools || [])) {
+    if (parseFloat(pool.baseReserves) > mostBase) {
+      mostBase = parseFloat(pool.baseReserves);
+      apr = parseFloat(pool.apr);
+    }
+  }
+  return apr;
+}
+
+const calculateTotalBorrowed = (fytoken: any) => {
+  let mostBase = 0;
+  let priceInBase = 0;
+  for (const pool of (fytoken?.pools || [])) {
+    if (parseFloat(pool.baseReserves) > mostBase) {
+      mostBase = parseFloat(pool.baseReserves);
+      priceInBase = parseFloat(pool.currentFYTokenPriceInBase);
+    }
+  }
+  return priceInBase * (fytoken?.totalSupply || 0);
+}
+
+const getVolume = (fytoken: any) => {
+  let volume = 0;
+  for (const pool of (fytoken?.pools || [])) {
+    volume += parseFloat(pool.totalVolumeInBase)
+  }
+  return volume;
+}
 
 const secondsInDay = 24 * 60 * 60;
 const todayTimestamp = Math.floor(Date.now() / 1000 / secondsInDay) * secondsInDay;
 
-const createChartData = (fydai: any, daysAgo: number): ChartDay => ({
+const createChartData = (fytoken: any, daysAgo: number): ChartDay => ({
   date: Math.floor(todayTimestamp - (daysAgo * secondsInDay)).toString(),
   dayString: Math.floor(todayTimestamp - (daysAgo * secondsInDay)).toString(),
-  liquidityUSD: calculateLiquidity(fydai),
-  apr: parseFloat(fydai.apr),
-  borrowed: calculateTotalBorrowed(fydai),
+  liquidityUSD: calculateLiquidity(fytoken),
+  apr: getAPR(fytoken),
+  borrowed: calculateTotalBorrowed(fytoken),
 });
 
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
-const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
+const Series: React.FC<{ fyToken: string }> = ({ fyToken }) => {
   const { data, error } = useQuery(SERIES_QUERY, {
     variables: {
-      symbol,
+      id: fyToken,
       ...getBlockNums(NUM_DAYS),
     },
   });
@@ -190,33 +229,34 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
     return <pre>{error}</pre>
   }
 
-  if (!data || data.now.length === 0) {
+  if (!data || !data.now) {
+    console.log(data)
     return <div>Not found</div>
   }
 
-  const [fydai] = data.now;
-
-  const liquidityNow = calculateLiquidity(fydai);
+  const fytoken = data.now;
+  console.log(data.now)
+  const liquidityNow = calculateLiquidity(fytoken);
   const liquidityYesterday = data.yesterday && data.yesterday.length > 0 ? calculateLiquidity(data.yesterday[0]) : 0;
   const liquidityPercentDiff = liquidityYesterday !== 0 ? liquidityNow / liquidityYesterday - 1 : null;
 
-  const totalBorrowedNow = calculateTotalBorrowed(fydai);
+  const totalBorrowedNow = calculateTotalBorrowed(fytoken);
   const totalBorrowedYesterday = data.yesterday && data.yesterday.length > 0 ? calculateTotalBorrowed(data.yesterday[0]) : 0;
   const totalBorrowedPercentDiff = totalBorrowedYesterday !== 0 ? totalBorrowedNow / totalBorrowedYesterday - 1 : null;
 
-  const totalVolNow = parseFloat(fydai.totalVolumeDai);
-  const totalVolYesterday = data.yesterday && data.yesterday.length > 0 ? parseFloat(data.yesterday[0].totalVolumeDai) : 0;
-  const totalVolTwoDaysAgo = data.twoDaysAgo && data.twoDaysAgo.length > 0 ? parseFloat(data.twoDaysAgo[0].totalVolumeDai) : 0;
+  const totalVolNow = getVolume(fytoken);
+  const totalVolYesterday = data.yesterday && data.yesterday.length > 0 ? getVolume(data.yesterday[0]) : 0;
+  const totalVolTwoDaysAgo = data.twoDaysAgo && data.twoDaysAgo.length > 0 ? getVolume(data.twoDaysAgo[0]) : 0;
   const volLast24hrs = totalVolNow - totalVolYesterday;
   const volPrevious24hrs = totalVolYesterday - totalVolTwoDaysAgo;
   const volPercentDiff = volLast24hrs !== 0 && volPrevious24hrs !== 0 ? volLast24hrs / volPrevious24hrs - 1 : null;
 
-  const chartData = timePeriods.map((name: string, i: number) => createChartData(data[name][0], i));
+  const chartData = timePeriods.map((name: string, i: number) => createChartData(data[name], i));
 
   return (
     <div>
       <Head>
-        <title>{formatMaturity(fydai.maturity)} Series - Yield</title>
+        <title>{fytoken.name} Series - Yield</title>
       </Head>
 
       <Toolbar>
@@ -224,12 +264,12 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
           <BackButton>Back to series</BackButton>
         </Link>
 
-        <EtherscanLink href={`https://etherscan.io/address/${fydai.address}`}>View on Etherscan</EtherscanLink>
+        <EtherscanLink href={`https://etherscan.io/address/${fytoken.id}`}>View on Etherscan</EtherscanLink>
       </Toolbar>
 
       <TitleBar>
-        <APRPill apr={parseFloat(fydai.apr)} series={fydai.symbol} />
-        <Title>{formatMaturity(fydai.maturity)}</Title>
+        <APRPill apr={parseFloat(fytoken.pools[0].apr)} series={fytoken.symbol} />
+        <Title>{formatMaturity(fytoken.maturity)}</Title>
       </TitleBar>
 
       <Hero>
@@ -270,8 +310,8 @@ const Series: React.FC<{ symbol: string }> = ({ symbol }) => {
         </GraphContainer>
       </Hero>
 
-      <Heading>Transactions</Heading>
-      <TransactionList fyDai={fydai.id} />
+      {/* <Heading>Transactions</Heading>
+      <TransactionList fytoken={fytoken.id} /> */}
     </div>
   );
 };
@@ -287,28 +327,29 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     return block;
   }));
 
-  const result = await apolloClient.query({
+  /*const result =*/ await apolloClient.query({
     query: SERIES_QUERY,
     variables: {
-      symbol: query.symbol,
+      id: query.fyToken,
       ...getBlockNums(NUM_DAYS),
     },
   });
-  if (result.data.now.length > 0) {
-    await apolloClient.query({
-      query: SERIES_TX_QUERY,
-      variables: {
-        fyDai: result.data.now[0].id,
-        limit: NUM_ROWS,
-        before: MAX_TIMESTAMP,
-      },
-    });
-  }
+
+  // if (result.data.now) {
+  //   await apolloClient.query({
+  //     query: SERIES_TX_QUERY,
+  //     variables: {
+  //       fytoken: result.data.now[0].id,
+  //       limit: NUM_ROWS,
+  //       before: MAX_TIMESTAMP,
+  //     },
+  //   });
+  // }
 
   return {
     props: {
       initialApolloState: apolloClient.cache.extract(),
-      symbol: query.symbol,
+      fyToken: query.fyToken,
       daysAgoCache: blockNumsDaysAgo,
     },
   };

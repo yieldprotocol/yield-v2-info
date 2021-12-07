@@ -8,7 +8,7 @@ function createApolloClient() {
   return new ApolloClient({
     ssrMode: typeof window === 'undefined',
     link: new HttpLink({
-      uri: 'https://api.thegraph.com/subgraphs/name/yieldprotocol/v2-kovan',
+      uri: 'https://api.thegraph.com/subgraphs/name/yieldprotocol/v2-mainnet',
       credentials: 'same-origin', // Additional fetch() options like `credentials` or `headers`
     }),
     cache: new InMemoryCache({

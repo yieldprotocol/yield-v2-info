@@ -120,8 +120,8 @@ const processSubgraphData = (data: any) => {
     }
 
     for (const fyToken of data.fytokens) {
-      if (result.prices[fyToken.underlyingAsset.symbol]) {
-        tvl += fyToken.totalInPools * result.prices[fyToken.underlyingAsset.symbol];
+      if (result.prices[fyToken.underlyingAsset?.symbol]) {
+        tvl += fyToken.totalInPools * result.prices[fyToken.underlyingAsset?.symbol];
       }
     }
 
