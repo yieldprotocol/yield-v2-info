@@ -34,18 +34,6 @@ const TLV = styled.div`
 
 const TLVLabel = styled.div``;
 
-const ValRow = styled.div`
-  display: flex;
-  font-size: 18px;
-`;
-
-const Val = styled.div`
-  margin-bottom: 2px;
-  flex: 1;
-`;
-
-const Label = styled.div``;
-
 const Column = styled.div`
   flex: 1;
   display: flex;
@@ -98,7 +86,7 @@ const processSubgraphData = (data: any) => {
     });
     const json = await req.json();
 
-    for (const feed in json.data.feeds) {
+    for (const feed of json.data.feeds) {
       if (feed.id === ETH_ORACLE) {
         setResult((value: any) => ({ ...value, prices: { ...value.prices, WETH: feed.rounds[0].value / 1e9 } }))
       }

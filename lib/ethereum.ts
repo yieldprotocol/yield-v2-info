@@ -57,7 +57,7 @@ export const getBlocksDaysAgo = async (days: number[]) => {
       throw new Error(`Couldn't find block number ${days[i]} days ago`)
     }
     const blockNum = res.data[`result${i}`][0].number;
-    results.push(parseInt(blockNum))
+    results.push(parseInt(blockNum) - 1) // Subtract 1 just to avoid bugs
   }
   return results
 }

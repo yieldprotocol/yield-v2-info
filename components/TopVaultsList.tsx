@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
-import { formatMaturity } from 'lib/format';
+// import { formatMaturity } from 'lib/format';
 
 const Table = styled.div`
   padding: 24px;
@@ -31,9 +31,9 @@ const TableBody = styled.ul`
   padding: 0;
 `;
 
-const Line = styled.div`
-  margin: 2px 0;
-`;
+// const Line = styled.div`
+//   margin: 2px 0;
+// `;
 
 const TableLI = styled.li`
   list-style: none;
@@ -78,8 +78,8 @@ export const TOP_VAULTS_QUERY = gql`
   }
 `;
 
-const totalDebt = (vault: any) => vault.fyDais.reduce((sum: number, fyDai: any) =>
-  sum + (parseFloat(fyDai.totalFYDaiDebt) * parseFloat(fyDai.fyDai.currentFYDaiPriceInDai)), 0);
+// const totalDebt = (vault: any) => vault.fyDais.reduce((sum: number, fyDai: any) =>
+//   sum + (parseFloat(fyDai.totalFYDaiDebt) * parseFloat(fyDai.fyDai.currentFYDaiPriceInDai)), 0);
 
 const localeOptions = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
