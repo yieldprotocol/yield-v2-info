@@ -33,7 +33,7 @@ export const estimateCurrentBlock = () => {
 export const getBlocksDaysAgo = async (days: number[]) => {
   const timestamps = days.map(numDays => numDays > 0
     ? Math.floor((new Date()).getTime() / 1000) - (ONE_DAY * numDays)
-    : Math.floor((new Date()).getTime() / 1000) - 60)
+    : Math.floor((new Date()).getTime() / 1000) - 120)
 
   const query = gql`query blocks {
     ${timestamps.map((timestamp: number, i: number) => `result${i}: blocks(

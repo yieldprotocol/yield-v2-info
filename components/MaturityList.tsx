@@ -137,21 +137,21 @@ const MaturityList: React.FC = () => {
                 <Cell width={80}>
                   <APRPill apr={parseFloat(fydai.pools[0].apr)} series={fydai.symbol} />
                 </Cell>
-                <Cell width={80}>{fydai.underlyingAsset.symbol}</Cell>
+                <Cell width={80}>{fydai.underlyingAsset?.symbol}</Cell>
                 <Cell flex={1}>{formatMaturity(fydai.maturity)}</Cell>
                 <Cell width={130} flex={0.6}>
                   {Numeral(calculateLiquidity(fydai)).format('0.[00]a')}
-                  {' '}{fydai.underlyingAsset.symbol}
+                  {' '}{fydai.underlyingAsset?.symbol}
                 </Cell>
                 <Cell width={120} flex={0.5}>
                   {Numeral(calculateVolume(fydai.pools, yesterdayVolumesPerPool)).format('0.[00]a')}
-                  {' '}{fydai.underlyingAsset.symbol}
+                  {' '}{fydai.underlyingAsset?.symbol}
                 </Cell>
                 <Cell width={120} flex={0.5}>
                   {Numeral(fydai.pools
                     .reduce((acc: number, pool: any) => acc + parseFloat(pool.totalTradingFeesInBase), 0)
                   ).format('0.[00]a')}
-                  {' '}{fydai.underlyingAsset.symbol}
+                  {' '}{fydai.underlyingAsset?.symbol}
                 </Cell>
               </TableLink>
             </Link>
@@ -167,21 +167,21 @@ const MaturityList: React.FC = () => {
                 <Link href={`/series/${fydai.symbol}`} passHref>
                   <TableLink>
                     <Cell width={80} />
-                    <Cell width={80}>{fydai.underlyingAsset.symbol}</Cell>
+                    <Cell width={80}>{fydai.underlyingAsset?.symbol}</Cell>
                     <Cell flex={1}>{formatMaturity(fydai.maturity)}</Cell>
                     <Cell width={130} flex={0.6}>
                       {Numeral(calculateLiquidity(fydai)).format('0.[00]a')}
-                      {' '}{fydai.underlyingAsset.symbol}
+                      {' '}{fydai.underlyingAsset?.symbol}
                     </Cell>
                     <Cell width={120} flex={0.5}>
                       {Numeral(calculateVolume(fydai.pools, yesterdayVolumesPerPool)).format('0.[00]a')}
-                      {' '}{fydai.underlyingAsset.symbol}
+                      {' '}{fydai.underlyingAsset?.symbol}
                     </Cell>
                     <Cell width={120} flex={0.5}>
                       {Numeral(fydai.pools
                         .reduce((acc: number, pool: any) => acc + parseFloat(pool.totalTradingFeesInBase), 0)
                       ).format('0.[00]a')}
-                      {' '}{fydai.underlyingAsset.symbol}
+                      {' '}{fydai.underlyingAsset?.symbol}
                     </Cell>
                   </TableLink>
                 </Link>
