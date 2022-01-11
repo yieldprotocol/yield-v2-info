@@ -226,7 +226,7 @@ const Series: React.FC<{ fyToken: string }> = ({ fyToken }) => {
   });
 
   if (error) {
-    return <pre>{error}</pre>
+    return <pre>{JSON.stringify(error)}</pre>
   }
 
   if (!data || !data.now) {
