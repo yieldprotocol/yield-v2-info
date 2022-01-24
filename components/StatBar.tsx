@@ -63,6 +63,15 @@ export const STAT_BAR_QUERY = gql`
 
 const ETH_ORACLE = '0x00c7a37b03690fb9f41b5c5af8131735c7275446';
 const BTC_ORACLE = '0xae74faa92cb67a95ebcab07358bc222e33a34da7';
+const UNI_ORACLE = '0x68577f915131087199fe48913d8b416b3984fd38';
+const LINK_ORACLE = '0xdfd03bfc3465107ce570a0397b247f546a42d0fa';
+
+const ORACLE_SYMBOLS: { [feed: string]: string } = {
+  [ETH_ORACLE]: 'WETH',
+  [BTC_ORACLE]: 'WBTC',
+  [UNI_ORACLE]: 'UNI',
+  [LINK_ORACLE]: 'LINK',
+}
 
 const processSubgraphData = (data: any) => {
   const [result, setResult] = useState<any>({ tvl: 0, totalDebt: 0, prices: { USDC: 1, DAI: 1, USDT: 1 } });
@@ -74,9 +83,9 @@ const processSubgraphData = (data: any) => {
       },
       body: JSON.stringify({
         query: `query {
-  feeds(where: {id_in: ["${ETH_ORACLE}", "${BTC_ORACLE}"]}) {
+  feeds(where: {id_in: [${Object.keys(ORACLE_SYMBOLS).map(feed => JSON.stringify(feed)).join(',')}]}) {
     id
-    rounds (orderBy: number, orderDirection: desc, first: 1) {
+    rounds (orderBy: number, orderDirection: desc, first: 20, where: { value_not: null }) {
       value
     }
   }
@@ -87,11 +96,14 @@ const processSubgraphData = (data: any) => {
     const json = await req.json();
 
     for (const feed of json.data.feeds) {
-      if (feed.id === ETH_ORACLE) {
-        setResult((value: any) => ({ ...value, prices: { ...value.prices, WETH: feed.rounds[0].value / 1e9 } }))
-      }
-      if (feed.id === BTC_ORACLE) {
-        setResult((value: any) => ({ ...value, prices: { ...value.prices, WETH: feed.rounds[0].value / 1e9 } }))
+      if (ORACLE_SYMBOLS[feed.id]) {
+        setResult((value: any) => ({
+          ...value,
+          prices: {
+            ...value.prices,
+            [ORACLE_SYMBOLS[feed.id]]: feed.rounds[0].value / 1e8,
+          },
+        }))
       }
     }
   }
