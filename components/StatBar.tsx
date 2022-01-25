@@ -43,6 +43,7 @@ const Column = styled.div`
 export const STAT_BAR_QUERY = gql`
   query stats {
     assets {
+      id
       symbol
       totalInPools
       totalCollateral
@@ -50,6 +51,7 @@ export const STAT_BAR_QUERY = gql`
     }
     fytokens {
       underlyingAsset {
+        id
         symbol
       }
       totalInPools
@@ -61,76 +63,74 @@ export const STAT_BAR_QUERY = gql`
   }
 `;
 
-const ETH_ORACLE = '0x00c7a37b03690fb9f41b5c5af8131735c7275446';
-const BTC_ORACLE = '0xae74faa92cb67a95ebcab07358bc222e33a34da7';
-const UNI_ORACLE = '0x68577f915131087199fe48913d8b416b3984fd38';
-const LINK_ORACLE = '0xdfd03bfc3465107ce570a0397b247f546a42d0fa';
-
-const ORACLE_SYMBOLS: { [feed: string]: string } = {
-  [ETH_ORACLE]: 'WETH',
-  [BTC_ORACLE]: 'WBTC',
-  [UNI_ORACLE]: 'UNI',
-  [LINK_ORACLE]: 'LINK',
-}
+const DAI = '0x6b175474e89094c44da98b954eedeac495271d0f'
+const USDC = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+const YVCUSDC = '0xa354f35829ae975e850e23e9615b11da1b3dc4de'
 
 const processSubgraphData = (data: any) => {
-  const [result, setResult] = useState<any>({ tvl: 0, totalDebt: 0, prices: { USDC: 1, DAI: 1, USDT: 1 } });
+  const [result, setResult] = useState<any>({ tvl: 0, totalDebt: 0, prices: { [USDC]: 1, [DAI]: 1, [YVCUSDC]: 1 } });
 
-  const getPrices = async () => {
-    const req = await fetch('https://gql.graph.chain.link/subgraphs/name/ethereum-mainnet', {
+  const getPrices = async (assets: string[]) => {
+    const req = await fetch('https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3', {
       headers: {
         accept: "application/json",
       },
       body: JSON.stringify({
         query: `query {
-  feeds(where: {id_in: [${Object.keys(ORACLE_SYMBOLS).map(feed => JSON.stringify(feed)).join(',')}]}) {
-    id
-    rounds (orderBy: number, orderDirection: desc, first: 20, where: { value_not: null }) {
-      value
-    }
-  }
-}`,
+          usdc: token(id: "${USDC}") {
+            derivedETH
+          }
+          tokens(where: {id_in: [${assets.map(asset => JSON.stringify(asset)).join(',')}]}) {
+            id
+            derivedETH
+          }
+        }`,
       }),
       method: "POST",
     });
     const json = await req.json();
 
-    for (const feed of json.data.feeds) {
-      if (ORACLE_SYMBOLS[feed.id]) {
-        setResult((value: any) => ({
-          ...value,
-          prices: {
-            ...value.prices,
-            [ORACLE_SYMBOLS[feed.id]]: feed.rounds[0].value / 1e8,
-          },
-        }))
-      }
+    const ethPrice = 1 / json.data.usdc.derivedETH
+
+    const newPrices: any = {}
+    for (const token of json.data.tokens) {
+      newPrices[token.id] = ethPrice * token.derivedETH;
     }
+    setResult((value: any) => ({
+      ...value,
+      prices: { ...value.prices, ...newPrices },
+    }))
   }
 
   useEffect(() => {
     let tvl = 0;
     let totalDebt = 0;
 
+    let missingAssets: string[] = [];
+
     for (const asset of data.assets) {
-      if (result.prices[asset.symbol]) {
-        tvl += (parseFloat(asset.totalInPools) + parseFloat(asset.totalCollateral)) * result.prices[asset.symbol];
-        totalDebt += asset.totalDebt * result.prices[asset.symbol];
+      if (result.prices[asset.id] !== undefined) {
+        tvl += (parseFloat(asset.totalInPools) + parseFloat(asset.totalCollateral)) * result.prices[asset.id];
+        totalDebt += asset.totalDebt * result.prices[asset.id];
+      } else {
+        missingAssets.push(asset.id)
       }
     }
 
     for (const fyToken of data.fytokens) {
-      if (result.prices[fyToken.underlyingAsset?.symbol]) {
-        tvl += fyToken.totalInPools * result.prices[fyToken.underlyingAsset?.symbol];
+      if (result.prices[fyToken.underlyingAsset?.id] !== undefined) {
+        tvl += fyToken.totalInPools * result.prices[fyToken.underlyingAsset?.id];
+      } else if (fyToken.underlyingAsset) {
+        missingAssets.push(fyToken.underlyingAsset.id)
       }
+    }
+
+    if (missingAssets.length > 0) {
+      getPrices(missingAssets)
     }
 
     setResult((_result: any) => ({ ..._result, tvl, totalDebt }));
   }, [data, result.prices]);
-
-  useEffect(() => {
-    getPrices();
-  }, []);
 
   return result;
 }
