@@ -48,6 +48,7 @@ export const STAT_BAR_QUERY = gql`
       totalInPools
       totalCollateral
       totalDebt
+      totalFYTokens
     }
     fytokens {
       underlyingAsset {
@@ -111,7 +112,7 @@ const processSubgraphData = (data: any) => {
     for (const asset of data.assets) {
       if (result.prices[asset.id] !== undefined) {
         tvl += (parseFloat(asset.totalInPools) + parseFloat(asset.totalCollateral)) * result.prices[asset.id];
-        totalDebt += asset.totalDebt * result.prices[asset.id];
+        totalDebt += asset.totalFYTokens * result.prices[asset.id];
       } else {
         missingAssets.push(asset.id)
       }
