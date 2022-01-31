@@ -64,6 +64,7 @@ export const ALL_MATURITIES_QUERY = gql`
       symbol
       name
       maturity
+      totalSupply
       pools {
         id
         apr
@@ -125,7 +126,7 @@ const MaturityList: React.FC = () => {
         <HeadingCol width={80}>Asset</HeadingCol>
         <HeadingCol flex={1}>Series</HeadingCol>
         <HeadingCol width={130} flex={0.6}>Liquidity</HeadingCol>
-        <HeadingCol width={120} flex={0.5}>Volume (24 hrs)</HeadingCol>
+        <HeadingCol width={120} flex={0.5}>Debt</HeadingCol>
         <HeadingCol width={120} flex={0.5}>Fees Paid</HeadingCol>
       </Heading>
 
@@ -144,7 +145,7 @@ const MaturityList: React.FC = () => {
                   {' '}{fydai.underlyingAsset?.symbol}
                 </Cell>
                 <Cell width={120} flex={0.5}>
-                  {Numeral(calculateVolume(fydai.pools, yesterdayVolumesPerPool)).format('0.[00]a')}
+                  {Numeral(fydai.totalSupply).format('0.[00]a')}
                   {' '}{fydai.underlyingAsset?.symbol}
                 </Cell>
                 <Cell width={120} flex={0.5}>
@@ -174,7 +175,7 @@ const MaturityList: React.FC = () => {
                       {' '}{fydai.underlyingAsset?.symbol}
                     </Cell>
                     <Cell width={120} flex={0.5}>
-                      {Numeral(calculateVolume(fydai.pools, yesterdayVolumesPerPool)).format('0.[00]a')}
+                      {Numeral(fydai.totalSupply).format('0.[00]a')}
                       {' '}{fydai.underlyingAsset?.symbol}
                     </Cell>
                     <Cell width={120} flex={0.5}>
