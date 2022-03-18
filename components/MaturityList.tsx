@@ -94,7 +94,7 @@ const MaturityList: React.FC = () => {
   }
 
   const now = Date.now() / 1000;
-  const matured = data.fytokens.filter((fydai: any) => parseInt(fydai.maturity) < now);
+  const matured = data.fytokens.filter((fydai: any) => parseInt(fydai.maturity) < now && fydai.underlyingAsset);
   const active = data.fytokens.filter((fydai: any) => parseInt(fydai.maturity) > now);
 
   return (
@@ -143,7 +143,7 @@ const MaturityList: React.FC = () => {
 
             {matured.map((fydai: any) => (
               <TableLI key={fydai.symbol}>
-                <Link href={`/series/${fydai.symbol}`} passHref>
+                <Link href={`/series/${fydai.id}`} passHref>
                   <TableLink>
                     <Cell width={80} />
                     <Cell width={80}>{fydai.underlyingAsset?.symbol}</Cell>
