@@ -27,7 +27,7 @@ function createApolloClient() {
   })
 }
 
-const apr2apy = (apr: number) => Math.pow(Math.E, apr) - 1
+const apr2apy = (apr: number) => (Math.pow(Math.E, apr / 100) - 1) * 100
 
 const handler = async (_req: NextApiRequest, res: NextApiResponse) => {
   try {
