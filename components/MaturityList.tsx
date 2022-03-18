@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import { gql, useQuery } from '@apollo/client';
 import Numeral from 'numeral';
 import { formatMaturity } from 'lib/format';
-import { getBlockDaysAgoCache } from 'lib/ethereum';
 import APRPill from './APRPill';
 
 const Table = styled.div`
@@ -58,7 +57,7 @@ const TableSubheader = styled.li`
 `
 
 export const ALL_MATURITIES_QUERY = gql`
-  query maturities($blockYesterday: Int!) {
+  query maturities {
     fytokens(orderBy: maturity) {
       id
       symbol
@@ -72,16 +71,11 @@ export const ALL_MATURITIES_QUERY = gql`
         baseReserves
         totalTradingFeesInBase
         currentFYTokenPriceInBase
-        totalVolumeInBase
       }
       underlyingAsset {
         name
         symbol
       }
-    }
-    yesterdayPools: pools(block: { number: $blockYesterday }) {
-      id
-      totalVolumeInBase
     }
   }
 `
@@ -92,27 +86,11 @@ const calculateLiquidity = (fyDai: any) =>
   0)
   // parseFloat(fyDai.poolDaiReserves) + (parseFloat(fyDai.poolFYDaiReserves) * parseFloat(fyDai.currentFYDaiPriceInDai));
 
-const calculateVolume = (pools: any[], yesterdayPools: any) =>
-  pools.reduce((total: number, pool: any) => yesterdayPools[pool.id]
-    ? total + (pool.totalVolumeInBase - yesterdayPools[pool.id])
-    : total,
-  0)
-
 const MaturityList: React.FC = () => {
-  const { error, data } = useQuery(ALL_MATURITIES_QUERY, {
-    variables: {
-      blockYesterday: getBlockDaysAgoCache(1),
-    },
-  });
+  const { error, data } = useQuery(ALL_MATURITIES_QUERY);
 
   if (error || !data) {
     return <pre>{error}</pre>
-  }
-
-  const yesterdayVolumesPerPool: { [id: string]: number } = {};
-
-  for (const pool of data.yesterdayPools) {
-    yesterdayVolumesPerPool[pool.id] = parseFloat(pool.totalVolumeInBase)
   }
 
   const now = Date.now() / 1000;

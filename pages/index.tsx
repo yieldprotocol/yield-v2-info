@@ -42,7 +42,7 @@ export async function getStaticProps() {
   setBlockDaysAgoCache(1, blockYesterday);
 
   await Promise.all([
-    apolloClient.query({ query: ALL_MATURITIES_QUERY, variables: { blockNow, blockYesterday } }),
+    apolloClient.query({ query: ALL_MATURITIES_QUERY }),
     apolloClient.query({ query: STAT_BAR_QUERY }),
     apolloClient.query({ query: TOP_VAULTS_QUERY }),
     // apolloClient.query({ query: FYDAI_CHART_QUERY, variables: getBlockNums(NUM_DAYS) }),
